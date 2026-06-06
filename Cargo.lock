@@ -414,6 +414,7 @@ dependencies = [
 [[package]]
 name = "jdw-osc-router"
 version = "0.1.0"
+source = "git+https://github.com/estrandv/jdw-osc-router.git?branch=master#398a354e23eadeffad5625ddc9c853a52bda8385"
 dependencies = [
  "rosc 0.7.0",
  "serde",
@@ -423,6 +424,7 @@ dependencies = [
 [[package]]
 name = "jdw-sc"
 version = "0.1.0"
+source = "git+https://github.com/estrandv/jdw-sc.git?branch=master#eee05f23e6a9087845afb42b2579bd827f32dbbe"
 dependencies = [
  "bigdecimal",
  "ctrlc",
@@ -442,6 +444,7 @@ dependencies = [
 [[package]]
 name = "jdw-sequencer"
 version = "0.1.0"
+source = "git+https://github.com/estrandv/jdw-sequencer.git?branch=master#6da4e3e3f93a97007a2db8a9eb2562413ed211cc"
 dependencies = [
  "bigdecimal",
  "bytes",

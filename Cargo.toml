@@ -8,9 +8,9 @@ name = "jdw-suite"
 path = "src/main.rs"
 
 [dependencies]
-jdw-osc-router = { path = "../jdw-osc-router" }
-jdw-sc          = { path = "../jdw-sc" }
-jdw-sequencer   = { path = "../jdw-sequencer" }
+jdw-osc-router = { git = "https://github.com/estrandv/jdw-osc-router.git", branch = "master" }
+jdw-sc         = { git = "https://github.com/estrandv/jdw-sc.git",         branch = "master" }
+jdw-sequencer  = { git = "https://github.com/estrandv/jdw-sequencer.git",  branch = "master" }
 log             = "0.4"
 simple_logger   = "5.0.0"
 rosc            = "0.10.1"
