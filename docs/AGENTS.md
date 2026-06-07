@@ -8,7 +8,7 @@ only CLI the user ever needs to run. Everything else is a library consumed by it
 | Crate | Role |
 |---|---|
 | `jdw-suite` | `jdw` binary — launch backends, send songs, manage suite |
-| `jdw-billboarding-backend` | Library — parse `.bbd` files, convert to OSC |
+| `jdw-billboarding-backend` | Library — parse `.bbd` files, convert to OSC, sample loading |
 | `jdw-osc-lib` | Library — `TimedOSCPacket` model |
 | `jdw-osc-router` | Service — routes OSC messages between components |
 | `jdw-sequencer` | Service — beat-synchronous sequencer |
@@ -26,11 +26,12 @@ jdw-suite/install.sh    # builds and installs the `jdw` binary
 ## Typical Workflow
 
 1. `jdw all` — start router + sequencer + jdw-sc
-2. `jdw setup <song.bbd>` — send synth config + setup commands
-3. `jdw play <song.bbd>` — send composition to sequencer (queue update)
-4. `jdw stop` — stop playback
-5. `jdw quiet <song.bbd>` — stop + silence drones
-6. `jdw terminate` — shut down suite
+2. `jdw setup <song.bbd>` — load samples + synthdefs + create effects + drones + commands
+3. `jdw update <song.bbd>` — reconfigure effects/drones/commands (live, without restart)
+4. `jdw play <song.bbd>` — send composition to sequencer (queue update)
+5. `jdw stop` — stop playback
+6. `jdw quiet <song.bbd>` — stop + silence drones
+7. `jdw terminate` — shut down suite
 
 ## Commands
 
@@ -40,11 +41,24 @@ jdw-suite/install.sh    # builds and installs the `jdw` binary
 | `jdw router` | Launch only the OSC router |
 | `jdw sc` | Launch only the SuperCollider wrapper |
 | `jdw sequencer` | Launch only the sequencer |
+| `jdw setup <file>` | Load samples, synthdefs, create effects/drones, send commands |
+| `jdw update <file>` | Reconfigure effects/drones/commands for a live song |
 | `jdw play <file>` | Send composition to the sequencer (queue update) |
-| `jdw setup <file>` | Configure synths + send setup commands |
 | `jdw stop` | Stop playback |
 | `jdw quiet <file>` | Stop playback + silence drones |
 | `jdw terminate` | Shut down the suite |
+
+## Config (`~/.config/jdw.toml`)
+
+Required `[pycompose]` section:
+```toml
+[pycompose]
+bbd_root = "/path/to/jdw-pycompose"
+synthdefs_scd_path = "/path/to/synthDefs.scd"
+template_synths_path = "/path/to/template_synths.txt"
+sample_pack_dir = "~/sample_packs"       # default: ~/sample_packs
+first_buffer_index = 100                  # default: 100
+```
 
 ## Port Convention
 
@@ -54,9 +68,3 @@ jdw-suite/install.sh    # builds and installs the `jdw` binary
 | 13331 | jdw-sc          |
 | 14441 | Sequencer       |
 | 13340 | Suite control   |
-
-## Config Lookup Order
-
-Compiled-in defaults → `~/.config/jdw.toml` → per-app `config` module init.
-Central config is required; apps error/exit if `~/.config/jdw.toml` does not
-exist (except suite control which gracefully defaults).

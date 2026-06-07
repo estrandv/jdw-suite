@@ -2,30 +2,29 @@
 
 ## Features
 
+- [x] **Full billboard parser** — complete. All `.bbd` features: sections,
+      headers, tracks, effects, commands, DEFAULT, filters, macros, shuttle
+      notation, arg inheritance, operators. Parse → OSC pipeline working.
+- [x] **Port Python compose logic to Rust** — complete. Sample loading,
+      synthdef loading, effects/drones create, command translation, queue
+      update, silence drones. Verified against Python for arena.bbd.
 - [ ] **NRT recording** — `jdw nrt <file> <output>` to trigger non-real-time
-      rendering via the SuperCollider wrapper
-- [ ] **Full billboard parser** — support full billboard format (not just
-      mini-billboard subset) with all composition features.
-      See [PLAN_full_billboard_parser.md](PLAN_full_billboard_parser.md) for
-      staged breakdown.
-- [ ] **Port Python compose logic to Rust** — eliminate Python dependency
-      entirely by porting `jdw-pycompose` composition logic to Rust
+      rendering via the SuperCollider wrapper. See
+      `jdw-pycompose/billboard_running.py` `nrt_record()` and
+      `jdw_billboarding/lib/billboard_running.py` `get_nrt_data()`.
+      Requires porting: Score class, NrtData, preload batching,
+      `/nrt_record_info`, `/nrt_record_finished` listener.
+- [ ] **`jdw all` idempotency** — kill existing scsynth/sclang before re-launch
+- [ ] **Effect modulation during update** — send `/note_modify` for existing
+      effects during `--update` (modifies running effects, not recreate them)
 - [ ] **Tray icon daemon** — `jdw daemon` as a supervisor that spawns, watches,
       and restarts services, with system tray integration
 - [ ] **Librarization** — both crates already have `[lib]` + `[[bin]]` targets
       with thin `main.rs` wrappers, but their library APIs are not clean:
       - **jdw-osc-router** (~1-2hrs): `run()` is a single blocking function.
-        Add a non-blocking `poll()` variant that processes one packet at a
-        time (so consumers can integrate into their own event loop). Replace
-        `unwrap()` panics with `Result` returns.
-      - **jdw-sequencer** (~3-5d): `run()` is a 231-line monolith intertwining
-        config init, logger setup, ringbuffer creation, OSC handler
-        registration, and thread spawning. Break into composable pieces
-        (e.g. `create_pipeline()`, `start_loop()`). Decouple from the global
-        config singleton (`OnceLock`). Expose internal sequencer state via
-        getters. Move logging init to `main.rs`. Remove nightly feature gates
-        (`result_flattening` is stable since 1.42; `proc_macro_hygiene` and
-        `decl_macro` need evaluation).
+        Add a non-blocking `poll()` variant.
+      - **jdw-sequencer** (~3-5d): `run()` is a 231-line monolith. Break into
+        composable pieces (e.g. `create_pipeline()`, `start_loop()`).
 - [ ] **Packaging** — platform-specific distribution:
       - macOS: `.app` bundle, sign + notarize, Homebrew tap
       - Windows: MSI installer or winget
@@ -46,36 +45,23 @@
 ### jdw-osc-router
 
 - [ ] `subscriber_data` is a `Vec` — O(n) scan per message. Should be
-      `HashMap<String, Vec<SocketAddr>>` indexed by `osc_address` for O(1)
-      lookup if subscriber count grows into the hundreds.
+      `HashMap<String, Vec<SocketAddr>>` for O(1) lookup.
 
 ### jdw-sc
 
-- [ ] `regex_search_node_ids` compiles `Regex` on every call (node_lookup.rs).
-      Called from `/note_modify` and `/free_notes` hot paths. An LRU cache of
-      compiled regexes would avoid repeated DFA compilation (10-100µs each).
-- [ ] `regex_clear_node_ids` — same regex recompilation issue as above.
+- [ ] `regex_search_node_ids` compiles `Regex` on every call. Cache compiled
+      regexes.
+- [ ] `regex_clear_node_ids` — same regex recompilation issue.
 
 ### jdw-sequencer
 
 - [ ] `sequencing_daemon.rs:131` — uncertain `.clone()` on tick result.
-      Investigate whether the borrow issue can be resolved to remove the clone
-      of the entire collected `Vec`.
-- [ ] Multiple `Utc::now()` syscalls per tick (3+ calls per tick in
-      `sequencing_daemon.rs`). Consolidate — `SystemTime::now()` suffices for
-      elapsed-time math without chrono.
+- [ ] Multiple `Utc::now()` syscalls per tick — consolidate.
 
 ### Cross-cutting
 
-- [ ] **BigDecimal in hot paths** — used throughout for beat arithmetic, OSC
-      time tags, gate time conversions. Every operation involves heap
-      allocation and arbitrary-precision arithmetic. Switching to integer
-      nanoseconds (`u64`) would eliminate allocation entirely and is ~100x
-      cheaper per operation. Large refactor touching every crate.
-- [ ] `jdw-osc-lib` `get_string_at` clones `OscType` on every access
-      (`model.rs:81`). `some.clone().string()` clones the entire `OscType`
-      enum (incl. inner `String`) because `rosc::OscType::string()` takes
-      `self` by value. A manual `match` against `OscType::String(s)` would
-      halve the allocation. Same pattern for `get_int_at`/`get_float_at`
-      (cheaper since int/float are `Copy`, but still unnecessary enum-wrapper
-      overhead).
+- [ ] **BigDecimal in hot paths** — switching to integer nanoseconds (`u64`)
+      would eliminate heap allocation (~100x cheaper).
+- [ ] `jdw-osc-lib` `get_string_at` clones `OscType` on every access.
+- [ ] jdw-suite Cargo.lock: simple_logger pulls time 0.3.47 requiring Rust
+      1.88. Pin time to 0.3.36 until toolchain update.

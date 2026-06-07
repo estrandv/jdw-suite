@@ -1,7 +1,9 @@
-# Plan: Full Billboard Parser
+# Plan: Full Billboard Parser — COMPLETED
 
-**Goal:** Replace the flat mini-billboard parser with a full parser that
-handles the complete Billboard Notation spec (per tree-sitter-jdw-billboarding).
+**Status:** All stages implemented and verified. See `AGENTS.md` for current
+state. This document is retained for historical reference.
+
+## Original Plan
 
 ## Data Model
 
