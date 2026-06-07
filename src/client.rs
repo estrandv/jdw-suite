@@ -264,17 +264,27 @@ pub fn nrt_record(file: &str) {
 
     let sock = std::net::UdpSocket::bind("127.0.0.1:0").expect("Failed to bind UDP socket");
 
+    let mut listener_port: u16 = 13456;
+
     for info in &bundles {
         println!("Recording track: {}", info.track_name);
 
         // Start listener BEFORE sending main bundle (race: jdw-sc responds fast)
-        let listener = match jdw_billboarding_backend::Listener::start(13456) {
-            Ok(l) => Some(l),
-            Err(e) => {
-                eprintln!("  Failed to start listener: {}", e);
-                std::process::exit(1);
+        let listener = match jdw_billboarding_backend::Listener::start(listener_port) {
+            Ok(l) => l,
+            Err(_e) => {
+                // Try next port if this one is busy
+                listener_port += 1;
+                jdw_billboarding_backend::Listener::start(listener_port)
+                    .unwrap_or_else(|e2| {
+                        eprintln!("  Failed to start listener: {}", e2);
+                        std::process::exit(1);
+                    })
             }
         };
+
+        let actual_port = listener_port;
+        listener_port += 1;
 
         // Subscribe to /nrt_record_finished on the router (before sending)
         let sub_msg = rosc::OscPacket::Message(rosc::OscMessage {
@@ -282,7 +292,7 @@ pub fn nrt_record(file: &str) {
             args: vec![
                 rosc::OscType::String("/nrt_record_finished".to_string()),
                 rosc::OscType::String("127.0.0.1".to_string()),
-                rosc::OscType::Int(13456),
+                rosc::OscType::Int(actual_port as i32),
             ],
         });
         let _ = send_osc_json(&sock, &osc_cfg.router_addr, &sub_msg);
@@ -305,8 +315,7 @@ pub fn nrt_record(file: &str) {
 
         println!("  NRT bundle sent, awaiting response...");
 
-        if let Some(listener) = listener {
-            if listener.wait_for_nrt() {
+        if listener.wait_for_nrt() {
                 match listener.get_response() {
                     Some((status, filename)) => {
                         println!("  NRT complete: {} → {}", status, filename);
@@ -318,7 +327,9 @@ pub fn nrt_record(file: &str) {
             } else {
                 eprintln!("  Timed out waiting for NRT completion");
             }
-        }
+        // Explicitly drop listener and let port release before next track
+        drop(listener);
+        std::thread::sleep(std::time::Duration::from_millis(200));
     }
 
     println!("NRT recording finished. {} track(s) processed.", bundles.len());
