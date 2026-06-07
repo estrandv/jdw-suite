@@ -91,16 +91,17 @@ pub fn setup(file: &str) {
         eprintln!("Failed to clear effects: {}", e);
         std::process::exit(1);
     }
-    if let Err(e) = jdw_billboarding_backend::osc::send_drones_create(&bb, &osc_cfg) {
-        eprintln!("Failed to create drones: {}", e);
+    // Commands (routers) must precede effects/drones — SC bus order is strict
+    if let Err(e) = jdw_billboarding_backend::osc::send_full_commands(&bb, &osc_cfg) {
+        eprintln!("Failed to send commands: {}", e);
         std::process::exit(1);
     }
     if let Err(e) = jdw_billboarding_backend::osc::send_effects_create(&bb, &osc_cfg) {
         eprintln!("Failed to create effects: {}", e);
         std::process::exit(1);
     }
-    if let Err(e) = jdw_billboarding_backend::osc::send_full_commands(&bb, &osc_cfg) {
-        eprintln!("Failed to send commands: {}", e);
+    if let Err(e) = jdw_billboarding_backend::osc::send_drones_create(&bb, &osc_cfg) {
+        eprintln!("Failed to create drones: {}", e);
         std::process::exit(1);
     }
 
@@ -144,16 +145,17 @@ pub fn update(file: &str) {
         eprintln!("Failed to clear effects: {}", e);
         std::process::exit(1);
     }
-    if let Err(e) = jdw_billboarding_backend::osc::send_drones_create(&bb, &cfg) {
-        eprintln!("Failed to create drones: {}", e);
+    // Commands (routers) must precede effects/drones — SC bus order is strict
+    if let Err(e) = jdw_billboarding_backend::osc::send_full_commands(&bb, &cfg) {
+        eprintln!("Failed to send commands: {}", e);
         std::process::exit(1);
     }
     if let Err(e) = jdw_billboarding_backend::osc::send_effects_create(&bb, &cfg) {
         eprintln!("Failed to create effects: {}", e);
         std::process::exit(1);
     }
-    if let Err(e) = jdw_billboarding_backend::osc::send_full_commands(&bb, &cfg) {
-        eprintln!("Failed to send commands: {}", e);
+    if let Err(e) = jdw_billboarding_backend::osc::send_drones_create(&bb, &cfg) {
+        eprintln!("Failed to create drones: {}", e);
         std::process::exit(1);
     }
 
