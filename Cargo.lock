@@ -449,7 +449,7 @@ checksum = "8f42a60cbdf9a97f5d2305f08a87dc4e09308d1276d28c869c684d7777685682"
 [[package]]
 name = "jdw-billboarding-backend"
 version = "0.1.0"
-source = "git+https://github.com/estrandv/jdw-billboarding-backend.git?branch=master#488ae76a65c3be5665a7341fe2dbc77952a1e23e"
+source = "git+https://github.com/estrandv/jdw-billboarding-backend.git?branch=master#cfc41c45572e91f2b261d1aa504979e0de28673a"
 dependencies = [
  "bigdecimal",
  "jdw-osc-lib",
