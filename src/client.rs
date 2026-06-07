@@ -73,8 +73,30 @@ pub fn setup(file: &str) {
         jdw_cfg.bbd_root.as_deref(),
     );
 
+    // Load samples from sample pack directory (before synthdefs, matching Python order)
+    let sample_pack_dir = jdw_cfg.sample_pack_dir.as_deref().unwrap_or("~/sample_packs");
+    let samples = jdw_billboarding_backend::get_default_samples(sample_pack_dir);
+    if !samples.is_empty() {
+        if let Err(e) = jdw_billboarding_backend::osc::send_samples(&samples, &osc_cfg) {
+            eprintln!("Failed to send samples: {}", e);
+            std::process::exit(1);
+        }
+    }
+
     if let Err(e) = jdw_billboarding_backend::osc::send_full_setup(&synthdefs, &osc_cfg) {
         eprintln!("Failed to send setup: {}", e);
+        std::process::exit(1);
+    }
+    if let Err(e) = jdw_billboarding_backend::osc::send_effects_clear(&osc_cfg) {
+        eprintln!("Failed to clear effects: {}", e);
+        std::process::exit(1);
+    }
+    if let Err(e) = jdw_billboarding_backend::osc::send_drones_create(&bb, &osc_cfg) {
+        eprintln!("Failed to create drones: {}", e);
+        std::process::exit(1);
+    }
+    if let Err(e) = jdw_billboarding_backend::osc::send_effects_create(&bb, &osc_cfg) {
+        eprintln!("Failed to create effects: {}", e);
         std::process::exit(1);
     }
     if let Err(e) = jdw_billboarding_backend::osc::send_full_commands(&bb, &osc_cfg) {
@@ -85,8 +107,8 @@ pub fn setup(file: &str) {
     let synthdef_count = synthdefs.len();
     let synth_count = bb.sections.len();
     println!(
-        "Setup sent: {} SynthDef(s) loaded via config, {} synth section(s) in billboard.",
-        synthdef_count, synth_count
+        "Setup sent: {} sample(s), {} SynthDef(s), {} synth section(s) in billboard.",
+        samples.len(), synthdef_count, synth_count
     );
 
     // Confirmation beep
@@ -105,6 +127,31 @@ pub fn update(file: &str) {
     };
 
     let cfg = jdw_billboarding_backend::OscConfig::default();
+
+    // Re-send synthdefs during update (matches Python's configure which includes synthdefs)
+    let jdw_cfg = jdw_billboarding_backend::config::JdwConfig::load(None);
+    let synthdefs = jdw_billboarding_backend::load_synthdefs(
+        jdw_cfg.synthdefs_scd_path.as_deref(),
+        jdw_cfg.template_synths_path.as_deref(),
+        jdw_cfg.bbd_root.as_deref(),
+    );
+    if let Err(e) = jdw_billboarding_backend::osc::send_full_setup(&synthdefs, &cfg) {
+        eprintln!("Failed to send synthdefs during update: {}", e);
+        std::process::exit(1);
+    }
+
+    if let Err(e) = jdw_billboarding_backend::osc::send_effects_clear(&cfg) {
+        eprintln!("Failed to clear effects: {}", e);
+        std::process::exit(1);
+    }
+    if let Err(e) = jdw_billboarding_backend::osc::send_drones_create(&bb, &cfg) {
+        eprintln!("Failed to create drones: {}", e);
+        std::process::exit(1);
+    }
+    if let Err(e) = jdw_billboarding_backend::osc::send_effects_create(&bb, &cfg) {
+        eprintln!("Failed to create effects: {}", e);
+        std::process::exit(1);
+    }
     if let Err(e) = jdw_billboarding_backend::osc::send_full_commands(&bb, &cfg) {
         eprintln!("Failed to send commands: {}", e);
         std::process::exit(1);
