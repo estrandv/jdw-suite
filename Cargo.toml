@@ -4,13 +4,17 @@ version = "0.1.0"
 edition = "2021"
 
 [[bin]]
-name = "jdw-suite"
+name = "jdw"
 path = "src/main.rs"
 
 [dependencies]
-jdw-osc-router = { git = "https://github.com/estrandv/jdw-osc-router.git", branch = "master" }
-jdw-sc         = { git = "https://github.com/estrandv/jdw-sc.git",         branch = "master" }
-jdw-sequencer  = { git = "https://github.com/estrandv/jdw-sequencer.git",  branch = "master" }
-log             = "0.4"
-simple_logger   = "5.0.0"
-rosc            = "0.10.1"
+jdw-osc-router          = { git = "https://github.com/estrandv/jdw-osc-router.git", branch = "master" }
+jdw-sc                  = { git = "https://github.com/estrandv/jdw-sc.git",         branch = "master" }
+jdw-sequencer           = { git = "https://github.com/estrandv/jdw-sequencer.git",  branch = "master" }
+jdw-billboarding-backend = { path = "../jdw-billboarding-backend" }
+clap                    = { version = "4", features = ["derive"] }
+log                     = "0.4"
+simple_logger           = "5.0.0"
+rosc                    = "0.10.1"
+serde                   = { version = "1", features = ["derive"] }
+toml                    = "0.8"
