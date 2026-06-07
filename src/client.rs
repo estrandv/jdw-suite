@@ -267,6 +267,27 @@ pub fn nrt_record(file: &str) {
     for info in &bundles {
         println!("Recording track: {}", info.track_name);
 
+        // Start listener BEFORE sending main bundle (race: jdw-sc responds fast)
+        let listener = match jdw_billboarding_backend::Listener::start(13456) {
+            Ok(l) => Some(l),
+            Err(e) => {
+                eprintln!("  Failed to start listener: {}", e);
+                std::process::exit(1);
+            }
+        };
+
+        // Subscribe to /nrt_record_finished on the router (before sending)
+        let sub_msg = rosc::OscPacket::Message(rosc::OscMessage {
+            addr: "/subscribe".to_string(),
+            args: vec![
+                rosc::OscType::String("/nrt_record_finished".to_string()),
+                rosc::OscType::String("127.0.0.1".to_string()),
+                rosc::OscType::Int(13456),
+            ],
+        });
+        let _ = send_osc_json(&sock, &osc_cfg.router_addr, &sub_msg);
+        std::thread::sleep(std::time::Duration::from_millis(50));
+
         // Send preload messages one-by-one
         for msg in &info.preload_messages {
             send_osc_json(&sock, &osc_cfg.router_addr, msg);
@@ -282,37 +303,20 @@ pub fn nrt_record(file: &str) {
         // Send main NRT record bundle
         send_osc_json(&sock, &osc_cfg.router_addr, &info.nrt_bundle);
 
-        println!("  NRT bundle sent, starting listener...");
+        println!("  NRT bundle sent, awaiting response...");
 
-        // Start listener and wait for completion
-        match jdw_billboarding_backend::Listener::start(13456) {
-            Ok(listener) => {
-                // Subscribe to /nrt_record_finished on the router
-                let sub_msg = rosc::OscPacket::Message(rosc::OscMessage {
-                    addr: "/subscribe".to_string(),
-                    args: vec![
-                        rosc::OscType::String("/nrt_record_finished".to_string()),
-                        rosc::OscType::String("127.0.0.1".to_string()),
-                        rosc::OscType::Int(13456),
-                    ],
-                });
-                let _ = send_osc_json(&sock, &osc_cfg.router_addr, &sub_msg);
-
-                if listener.wait_for_nrt() {
-                    match listener.get_response() {
-                        Some((status, filename)) => {
-                            println!("  NRT complete: {} → {}", status, filename);
-                        }
-                        None => {
-                            eprintln!("  Warning: got response but couldn't parse");
-                        }
+        if let Some(listener) = listener {
+            if listener.wait_for_nrt() {
+                match listener.get_response() {
+                    Some((status, filename)) => {
+                        println!("  NRT complete: {} → {}", status, filename);
                     }
-                } else {
-                    eprintln!("  Timed out waiting for NRT completion");
+                    None => {
+                        eprintln!("  Warning: got response but couldn't parse");
+                    }
                 }
-            }
-            Err(e) => {
-                eprintln!("  Failed to start listener: {}", e);
+            } else {
+                eprintln!("  Timed out waiting for NRT completion");
             }
         }
     }

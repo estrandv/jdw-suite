@@ -87,6 +87,7 @@ pub fn run_all(quiet: bool) {
             ("/set_bpm", sc_port),
             ("/jdw_sc_event_trigger", sc_port),
             ("/bundle", seq_port),
+            ("/nrt_record_finished", 13456),
             ("/set_bpm", seq_port),
             ("/hard_stop", seq_port),
             ("/wipe_on_finish", seq_port),
