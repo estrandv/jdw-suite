@@ -1,6 +1,6 @@
 #![feature(result_flattening, proc_macro_hygiene, decl_macro)]
 
-use clap::{Parser, Subcommand};
+use clap::{CommandFactory, Parser, Subcommand};
 
 mod client;
 mod config;
@@ -26,16 +26,26 @@ enum Commands {
     Sc,
     /// Launch only the beat-synchronous sequencer
     Sequencer,
-    /// Send a composition file to the running suite
-    Send {
+    /// Play a composition file on the running suite (queue update)
+    Play {
         /// Path to a billboard composition file (.txt or .bbd)
+        file: String,
+    },
+    /// Configure synths and samples for a composition (setup + commands)
+    Setup {
+        /// Path to a billboard composition file
+        file: String,
+    },
+    /// Re-configure a composition (commands only, no synth reload)
+    Update {
+        /// Path to a billboard composition file
         file: String,
     },
     /// Stop all playback on the running suite
     Stop,
-    /// Load synthdefs and samples for a composition
-    Setup {
-        /// Path to a billboard composition file
+    /// Stop playback and silence all drones
+    Quiet {
+        /// Path to a billboard composition file (for drone identification)
         file: String,
     },
     /// Shut down the running suite
@@ -46,14 +56,23 @@ fn main() {
     let cli = Cli::parse();
     let quiet = cli.quiet;
 
-    match cli.command.unwrap_or(Commands::All) {
+    let Some(command) = cli.command else {
+        let mut cmd = Cli::command();
+        cmd.print_help().unwrap();
+        println!();
+        std::process::exit(0);
+    };
+
+    match command {
         Commands::All => launch::run_all(quiet),
         Commands::Router => launch::run_router(quiet),
         Commands::Sc => launch::run_sc(quiet),
         Commands::Sequencer => launch::run_sequencer(quiet),
-        Commands::Send { file } => client::send(&file),
-        Commands::Stop => client::stop(),
+        Commands::Play { file } => client::play(&file),
         Commands::Setup { file } => client::setup(&file),
+        Commands::Update { file } => client::update(&file),
+        Commands::Stop => client::stop(),
+        Commands::Quiet { file } => client::quiet(&file),
         Commands::Terminate => client::terminate(),
     }
 }

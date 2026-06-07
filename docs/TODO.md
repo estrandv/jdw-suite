@@ -5,7 +5,9 @@
 - [ ] **NRT recording** — `jdw nrt <file> <output>` to trigger non-real-time
       rendering via the SuperCollider wrapper
 - [ ] **Full billboard parser** — support full billboard format (not just
-      mini-billboard subset) with all composition features
+      mini-billboard subset) with all composition features.
+      See [PLAN_full_billboard_parser.md](PLAN_full_billboard_parser.md) for
+      staged breakdown.
 - [ ] **Port Python compose logic to Rust** — eliminate Python dependency
       entirely by porting `jdw-pycompose` composition logic to Rust
 - [ ] **Tray icon daemon** — `jdw daemon` as a supervisor that spawns, watches,
