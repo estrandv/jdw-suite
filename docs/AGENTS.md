@@ -2,69 +2,82 @@
 
 ## Architecture
 
-**jdw-suite** is the end-user entry point. It produces the `jdw` binary — the
-only CLI the user ever needs to run. Everything else is a library consumed by it:
+**jdw-suite** is the end-user entry point. The `jdw` binary provides all CLI commands.
 
 | Crate | Role |
 |---|---|
 | `jdw-suite` | `jdw` binary — launch backends, send songs, manage suite |
-| `jdw-billboarding-backend` | Library — parse `.bbd` files, convert to OSC, sample loading |
+| `jdw-billboarding-backend` | Library — parse `.bbd`, convert to OSC, sample loading, NRT |
 | `jdw-osc-lib` | Library — `TimedOSCPacket` model |
 | `jdw-osc-router` | Service — routes OSC messages between components |
 | `jdw-sequencer` | Service — beat-synchronous sequencer |
-| `jdw-sc` | Service — SuperCollider wrapper |
-
-The billboarding backend is a **library only** (no binary, no install.sh). It is
-pulled in via `Cargo.toml` git dependency and consumed by `client.rs`.
-
-## Installation
-
-```bash
-jdw-suite/install.sh    # builds and installs the `jdw` binary
-```
-
-## Typical Workflow
-
-1. `jdw all` — start router + sequencer + jdw-sc
-2. `jdw setup <song.bbd>` — load samples + synthdefs + create effects + drones + commands
-3. `jdw update <song.bbd>` — reconfigure effects/drones/commands (live, without restart)
-4. `jdw play <song.bbd>` — send composition to sequencer (queue update)
-5. `jdw stop` — stop playback
-6. `jdw quiet <song.bbd>` — stop + silence drones
-7. `jdw terminate` — shut down suite
+| `jdw-sc` | Service — SuperCollider wrapper + NRT rendering |
 
 ## Commands
 
-| Command | What it does |
-|---|---|
-| `jdw all` | Launch all backends (router, sequencer, SC) |
-| `jdw router` | Launch only the OSC router |
-| `jdw sc` | Launch only the SuperCollider wrapper |
-| `jdw sequencer` | Launch only the sequencer |
-| `jdw setup <file>` | Load samples, synthdefs, create effects/drones, send commands |
-| `jdw update <file>` | Reconfigure effects/drones/commands for a live song |
-| `jdw play <file>` | Send composition to the sequencer (queue update) |
-| `jdw stop` | Stop playback |
-| `jdw quiet <file>` | Stop playback + silence drones |
-| `jdw terminate` | Shut down the suite |
+| Command | Status | What it does |
+|---|---|---|
+| `jdw all` | Working | Launch all backends (router, sequencer, SC) |
+| `jdw setup <file>` | Working | Load samples, synthdefs, effects, drones, commands |
+| `jdw update <file>` | Working | Reconfigure effects/drones/commands live |
+| `jdw play <file>` | Working | Send composition to sequencer |
+| `jdw stop` | Working | Stop playback |
+| `jdw quiet <file>` | Working | Stop + silence drones |
+| `jdw terminate` | Working | Shut down suite |
+| `jdw nrt <file>` | Mostly | NRT render to WAV (see known issue below) |
+
+## Setup Flow (matches Python)
+
+```
+send_samples → send_full_setup (synthdefs)
+→ send_effects_clear → send_full_commands (routers)
+→ send_effects_create → send_drones_create → beep
+```
+
+## NRT Flow
+
+```
+parse_billboard_file → get_nrt_record_bundles
+→ for each track:
+    1. Start Listener on incremental port (13456+)
+    2. Subscribe /nrt_record_finished to listener port
+    3. Send preload messages (/clear_nrt, /create_synthdef, /load_sample)
+    4. Send preload bundle (commands + effects at t=0)
+    5. Send main nrt_record bundle (timed notes)
+    6. wait_for_nrt() — blocks until /nrt_record_finished or timeout
+    7. Drop listener, sleep 200ms, next track
+```
 
 ## Config (`~/.config/jdw.toml`)
 
-Required `[pycompose]` section:
 ```toml
 [pycompose]
 bbd_root = "/path/to/jdw-pycompose"
 synthdefs_scd_path = "/path/to/synthDefs.scd"
 template_synths_path = "/path/to/template_synths.txt"
-sample_pack_dir = "~/sample_packs"       # default: ~/sample_packs
-first_buffer_index = 100                  # default: 100
+sample_pack_dir = "~/sample_packs"
 ```
 
-## Port Convention
+## Known Issue — NRT tracks hang on `Preloaded nrt packets: 0`
 
-| Port  | Service         |
-|-------|-----------------|
-| 13339 | OSC Router      |
-| 13331 | jdw-sc          |
-| 14441 | Sequencer       |
-| 13340 | Suite control   |
+Some NRT tracks hang. The jdw-sc log shows `Preloaded nrt packets: 0` followed by
+a hang where `/nrt_done` never arrives. After timeout, jdw-sc sends FAILURE.
+
+The listener eventually times out (NRT CLI says "Timed out"), but jdw-sc DID send
+`/nrt_record_finished "FAILURE"` — it was just lost (listener port race?).
+
+See `jdw-billboarding-backend/AGENTS.md` for detailed pro/con analysis.
+
+### What we know:
+- Tracks with `Preloaded nrt packets: 0` have 168-640 notes in the main bundle
+- The main bundle IS being sent and IS being processed by jdw-sc
+- jdw-sc generates the SCD file, sends to sclang, awaits `/nrt_done`
+- sclang appears to render the SCD but never sends `/nrt_done`
+- jdw-sc's `await_internal_response` had a bug (fixed: set_read_timeout)
+- Sample filtering fixed (10x fewer buffer loads per SCD)
+
+### To investigate:
+- Does the `set_read_timeout` fix resolve the hang?
+- Does Python also have empty-preload tracks, and do they work?
+- Is `server_osc_socket_name` ("o") correct for sclang NRT mode?
+- Is `/nrt_done` being sent by sclang but getting lost in routing?
