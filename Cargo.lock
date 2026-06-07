@@ -483,7 +483,7 @@ dependencies = [
 [[package]]
 name = "jdw-sc"
 version = "0.1.0"
-source = "git+https://github.com/estrandv/jdw-sc.git?branch=master#eee05f23e6a9087845afb42b2579bd827f32dbbe"
+source = "git+https://github.com/estrandv/jdw-sc.git?branch=master#d58f9dcea846a9d12e056847101839a54d14a761"
 dependencies = [
  "bigdecimal",
  "ctrlc",
