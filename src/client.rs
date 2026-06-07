@@ -237,3 +237,92 @@ pub fn terminate() {
         }
     }
 }
+
+/// Non-real-time recording: render a composition to a WAV file.
+pub fn nrt_record(file: &str) {
+    let bb = match jdw_billboarding_backend::parse_billboard_file(file) {
+        Ok(bb) => bb,
+        Err(e) => {
+            eprintln!("Error parsing {}: {}", file, e);
+            std::process::exit(1);
+        }
+    };
+
+    let jdw_cfg = jdw_billboarding_backend::config::JdwConfig::load(None);
+    let osc_cfg = jdw_cfg.to_osc_config();
+
+    let synthdefs = jdw_billboarding_backend::load_synthdefs(
+        jdw_cfg.synthdefs_scd_path.as_deref(),
+        jdw_cfg.template_synths_path.as_deref(),
+        jdw_cfg.bbd_root.as_deref(),
+    );
+
+    let sample_pack_dir = jdw_cfg.sample_pack_dir.as_deref().unwrap_or("~/sample_packs");
+    let samples = jdw_billboarding_backend::get_default_samples(sample_pack_dir);
+
+    let bundles = jdw_billboarding_backend::get_nrt_record_bundles(&bb, &synthdefs, &samples);
+
+    let sock = std::net::UdpSocket::bind("127.0.0.1:0").expect("Failed to bind UDP socket");
+
+    for info in &bundles {
+        println!("Recording track: {}", info.track_name);
+
+        // Send preload messages one-by-one
+        for msg in &info.preload_messages {
+            send_osc_json(&sock, &osc_cfg.router_addr, msg);
+            std::thread::sleep(std::time::Duration::from_millis(5));
+        }
+
+        // Send preload bundles
+        for bundle in &info.preload_bundles {
+            send_osc_json(&sock, &osc_cfg.router_addr, bundle);
+            std::thread::sleep(std::time::Duration::from_millis(5));
+        }
+
+        // Send main NRT record bundle
+        send_osc_json(&sock, &osc_cfg.router_addr, &info.nrt_bundle);
+
+        println!("  NRT bundle sent, starting listener...");
+
+        // Start listener and wait for completion
+        match jdw_billboarding_backend::Listener::start(13456) {
+            Ok(listener) => {
+                // Subscribe to /nrt_record_finished on the router
+                let sub_msg = rosc::OscPacket::Message(rosc::OscMessage {
+                    addr: "/subscribe".to_string(),
+                    args: vec![
+                        rosc::OscType::String("/nrt_record_finished".to_string()),
+                        rosc::OscType::String("127.0.0.1".to_string()),
+                        rosc::OscType::Int(13456),
+                    ],
+                });
+                let _ = send_osc_json(&sock, &osc_cfg.router_addr, &sub_msg);
+
+                if listener.wait_for_nrt() {
+                    match listener.get_response() {
+                        Some((status, filename)) => {
+                            println!("  NRT complete: {} → {}", status, filename);
+                        }
+                        None => {
+                            eprintln!("  Warning: got response but couldn't parse");
+                        }
+                    }
+                } else {
+                    eprintln!("  Timed out waiting for NRT completion");
+                }
+            }
+            Err(e) => {
+                eprintln!("  Failed to start listener: {}", e);
+            }
+        }
+    }
+
+    println!("NRT recording finished. {} track(s) processed.", bundles.len());
+}
+
+fn send_osc_json(sock: &std::net::UdpSocket, addr: &str, packet: &rosc::OscPacket) -> Result<(), String> {
+    let buf = rosc::encoder::encode(packet).map_err(|e| format!("encode: {}", e))?;
+    let target: std::net::SocketAddr = addr.parse().map_err(|e| format!("addr: {}", e))?;
+    sock.send_to(&buf, target).map_err(|e| format!("send: {}", e))?;
+    Ok(())
+}
