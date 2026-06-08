@@ -13,7 +13,7 @@ struct Cli {
     command: Option<Commands>,
 
     #[arg(short, long, global = true)]
-    quiet: bool,
+    verbose: bool,
 }
 
 #[derive(Subcommand)]
@@ -59,7 +59,8 @@ enum Commands {
 
 fn main() {
     let cli = Cli::parse();
-    let quiet = cli.quiet;
+    let verbose = cli.verbose;
+    let quiet = !verbose;
 
     let Some(command) = cli.command else {
         let mut cmd = Cli::command();

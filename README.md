@@ -38,7 +38,7 @@ router subscriptions automatically.
 
 | Flag          | Effect                     |
 |---------------|----------------------------|
-| `-q` / `--quiet` | Suppress info logs, errors only |
+| `-v` / `--verbose` | Show all logs (default: errors only) |
 
 ## Configuration
 
