@@ -449,7 +449,7 @@ checksum = "8f42a60cbdf9a97f5d2305f08a87dc4e09308d1276d28c869c684d7777685682"
 [[package]]
 name = "jdw-billboarding-backend"
 version = "0.1.0"
-source = "git+https://github.com/estrandv/jdw-billboarding-backend.git?branch=master#f8273458f5ff48c404289a19068a91d184b17d29"
+source = "git+https://github.com/estrandv/jdw-billboarding-backend.git?branch=master#9ec8655b571cbddf1e14e72b648f4b64a1cad699"
 dependencies = [
  "bigdecimal",
  "jdw-osc-lib",
@@ -483,7 +483,7 @@ dependencies = [
 [[package]]
 name = "jdw-sc"
 version = "0.1.0"
-source = "git+https://github.com/estrandv/jdw-sc.git?branch=master#15d4865c7e58b802ddafd4a7537bd0380586cb15"
+source = "git+https://github.com/estrandv/jdw-sc.git?branch=master#5ffb301b17d959f1051118052b505f5dd53b9661"
 dependencies = [
  "bigdecimal",
  "ctrlc",
