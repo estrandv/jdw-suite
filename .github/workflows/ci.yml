@@ -1,13 +1,51 @@
-# CI temporarily disabled — see docs/RELEASE_0_1.md
+name: Release
 
-# Cargo git dependencies (jdw-billboarding-backend, jdw-sc, etc.) fail to
-# clone in GitHub Actions even though all repos are public. Every approach
-# tried (url.insteadOf, extraheader, GIT_CONFIG_NOSYSTEM, GIT_ASKPASS,
-# credential.helper, CARGO_NET_GIT_FETCH_WITH_CLI, libgit2) hits the same:
-#
-#   failed to authenticate when downloading repository
-#
-# This is a known libgit2/Cargo limitation in CI runners. The proper fix
-# is publishing each crate to crates.io, then using normal version deps.
-#
-# Until then, releases are built locally via scripts/release.sh.
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - target: x86_64-unknown-linux-gnu
+            os: ubuntu-latest
+            ext: ""
+
+          - target: aarch64-apple-darwin
+            os: macos-latest
+            ext: ""
+
+          - target: x86_64-apple-darwin
+            os: macos-13
+            ext: ""
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Build
+        run: cargo build --release --target ${{ matrix.target }}
+
+      - name: Package
+        run: |
+          mkdir release
+          cp target/${{ matrix.target }}/release/jdw${{ matrix.ext }} release/
+          cp assets/hello.bbd release/
+          cp assets/synthdefs.scd release/
+          cp assets/example.jdw.toml release/
+          cp assets/install.sh release/
+          cd release && zip -r ../jdw-v0.1-${{ matrix.target }}.zip .
+
+      - name: Upload to Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: jdw-v0.1-*.zip

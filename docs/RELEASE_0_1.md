@@ -112,17 +112,13 @@ Merge + playback of all NRT tracks:
 
 ## CI
 
-**Disabled.** GitHub Actions can't clone Cargo git dependencies from public
-repos — libgit2's credential chain fails regardless of config. Every approach
-tried (url.insteadOf, extraheader, GIT_CONFIG_NOSYSTEM, GIT_ASKPASS) hits:
+**Enabled.** All git dependencies are public repos. One was private
+(`jdw-billboarding-backend`), causing CI auth failures since `GITHUB_TOKEN`
+only has access to the current repo. Making it public fixed everything —
+no auth hacks needed.
 
-```
-failed to authenticate when downloading repository
-```
-
-Proper fix: publish each crate to crates.io, switch jdw-suite to normal
-version deps. Until then, `scripts/release.sh` builds + uploads from the local
-machine (Linux-only; macOS builds need cross-compilation or a Mac).
+If repos are made private again, either publish crates to crates.io
+or use a PAT + `url.insteadOf`.
 
 ## macOS Codesigning
 
