@@ -260,7 +260,9 @@ pub fn nrt_record(file: &str) {
     let sample_pack_dir = jdw_cfg.sample_pack_dir.as_deref().unwrap_or("~/sample_packs");
     let samples = jdw_billboarding_backend::get_default_samples(sample_pack_dir);
 
-    let bundles = jdw_billboarding_backend::get_nrt_record_bundles(&bb, &synthdefs, &samples);
+    let nrt_output_dir = jdw_cfg.nrt_output_dir.as_deref().unwrap_or("~/jdw_output");
+    let nrt_output_dir = nrt_output_dir.replacen("~", &std::env::var("HOME").unwrap_or_else(|_| ".".into()), 1);
+    let bundles = jdw_billboarding_backend::get_nrt_record_bundles(&bb, &synthdefs, &samples, &nrt_output_dir);
 
     let sock = std::net::UdpSocket::bind("127.0.0.1:0").expect("Failed to bind UDP socket");
 
@@ -298,20 +300,36 @@ pub fn nrt_record(file: &str) {
         let _ = send_osc_json(&sock, &osc_cfg.router_addr, &sub_msg);
         std::thread::sleep(std::time::Duration::from_millis(50));
 
-        // Send preload messages one-by-one
+        eprintln!("  preload_msgs: {} messages", info.preload_messages.len());
         for msg in &info.preload_messages {
-            send_osc_json(&sock, &osc_cfg.router_addr, msg);
+            if let Err(e) = send_osc_json(&sock, &osc_cfg.router_addr, msg) {
+                eprintln!("  preload msg send error: {}", e);
+            }
             std::thread::sleep(std::time::Duration::from_millis(5));
         }
 
-        // Send preload bundles
+        eprintln!("  preload_bundles: {} bundles", info.preload_bundles.len());
         for bundle in &info.preload_bundles {
-            send_osc_json(&sock, &osc_cfg.router_addr, bundle);
+            if let Err(e) = send_osc_json(&sock, &osc_cfg.router_addr, bundle) {
+                eprintln!("  preload bundle send error: {}", e);
+            }
             std::thread::sleep(std::time::Duration::from_millis(5));
         }
 
-        // Send main NRT record bundle
-        send_osc_json(&sock, &osc_cfg.router_addr, &info.nrt_bundle);
+        // NRT bundle is metadata-only (all timed data in preload), always fits in UDP
+        let nrt_buf = match rosc::encoder::encode(&info.nrt_bundle) {
+            Ok(b) => b,
+            Err(e) => { eprintln!("  nrt_record encode error: {}", e); return; }
+        };
+        eprintln!("  nrt_record bundle size: {} bytes", nrt_buf.len());
+
+        let nrt_target: std::net::SocketAddr = match osc_cfg.router_addr.parse() {
+            Ok(a) => a,
+            Err(e) => { eprintln!("  nrt_record addr parse error: {}", e); return; }
+        };
+        if let Err(e) = sock.send_to(&nrt_buf, nrt_target) {
+            eprintln!("  nrt_record bundle send error: {}", e);
+        }
 
         println!("  NRT bundle sent, awaiting response...");
 

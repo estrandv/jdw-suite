@@ -58,26 +58,22 @@ template_synths_path = "/path/to/template_synths.txt"
 sample_pack_dir = "~/sample_packs"
 ```
 
-## Known Issue — NRT tracks hang on `Preloaded nrt packets: 0`
+## 🔴 BLOCKING: NRT tracks hang — `/nrt_done` never arrives from sclang
 
-Some NRT tracks hang. The jdw-sc log shows `Preloaded nrt packets: 0` followed by
-a hang where `/nrt_done` never arrives. After timeout, jdw-sc sends FAILURE.
+**This is NOT a timeout problem. "Timing out" is an error — the ONLY acceptable
+outcome is receiving `/nrt_done`.**
 
-The listener eventually times out (NRT CLI says "Timed out"), but jdw-sc DID send
-`/nrt_record_finished "FAILURE"` — it was just lost (listener port race?).
+The pattern: tracks where jdw-sc logs `Preloaded nrt packets: 0` never receive
+`/nrt_done` from sclang. The SCD file is generated correctly (verified). jdw-sc
+sends it to sclang. sclang renders but the `action:` callback never fires.
 
-See `jdw-billboarding-backend/AGENTS.md` for detailed pro/con analysis.
+The `set_read_timeout` fix (57fc9c2) only makes the hang visible — it does NOT
+fix why `/nrt_done` never arrives. That fix should be reverted or kept only as
+a safety net.
 
-### What we know:
-- Tracks with `Preloaded nrt packets: 0` have 168-640 notes in the main bundle
-- The main bundle IS being sent and IS being processed by jdw-sc
-- jdw-sc generates the SCD file, sends to sclang, awaits `/nrt_done`
-- sclang appears to render the SCD but never sends `/nrt_done`
-- jdw-sc's `await_internal_response` had a bug (fixed: set_read_timeout)
-- Sample filtering fixed (10x fewer buffer loads per SCD)
+**Top theory**: The SC `action: { o.sendMsg("/nrt_done", "ok"); }` in the NRT
+SCD template might not fire for NRT servers. Python's SCD may use a different
+mechanism. Compare the Python-generated SCD with the Rust-generated SCD for
+the same track.
 
-### To investigate:
-- Does the `set_read_timeout` fix resolve the hang?
-- Does Python also have empty-preload tracks, and do they work?
-- Is `server_osc_socket_name` ("o") correct for sclang NRT mode?
-- Is `/nrt_done` being sent by sclang but getting lost in routing?
+See `jdw-billboarding-backend/AGENTS.md` for full analysis.

@@ -84,6 +84,7 @@ pub fn run_all(quiet: bool) {
             ("/load_sample", sc_port),
             ("/free_notes", sc_port),
             ("/clear_nrt", sc_port),
+            ("/nrt_record_from_file", sc_port),
             ("/set_bpm", sc_port),
             ("/jdw_sc_event_trigger", sc_port),
             ("/bundle", seq_port),
