@@ -1,17 +1,25 @@
 # AGENTS.md — jdw-suite
 
-## Architecture
+> **This is the canonical entry point for any agent working on the jdw project.**
+> Start here. Each sub-project has its own AGENTS.md with deeper module-level
+> details, but this file establishes the full ecosystem map.
 
-**jdw-suite** is the end-user entry point. The `jdw` binary provides all CLI commands.
+## Project Map
 
-| Crate | Role |
-|---|---|
-| `jdw-suite` | `jdw` binary — launch backends, send songs, manage suite |
-| `jdw-billboarding-backend` | Library — parse `.bbd`, convert to OSC, sample loading, NRT |
-| `jdw-osc-lib` | Library — `TimedOSCPacket` model |
-| `jdw-osc-router` | Service — routes OSC messages between components |
-| `jdw-sequencer` | Service — beat-synchronous sequencer |
-| `jdw-sc` | Service — SuperCollider wrapper + NRT rendering |
+All repositories owned by [`estrandv`](https://github.com/estrandv). Every
+crate is on `master` branch; we always use latest, never pin to specific revs.
+
+| Crate | Type | Role |
+|---|---|---|
+| `jdw-suite` | Binary + orchestrator | `jdw` CLI — launch backends, send songs, manage suite |
+| `jdw-billboarding-backend` | Library | Parse `.bbd`, convert to OSC, sample loading, NRT |
+| `jdw-osc-lib` | Library | Shared OSC data models (`TimedOSCPacket`, etc.) |
+| `jdw-osc-router` | Service | Routes OSC messages between components |
+| `jdw-sequencer` | Service | Beat-synchronous sequencer |
+| `jdw-sc` | Service | SuperCollider wrapper + NRT rendering |
+
+GitHub: `https://github.com/estrandv/<crate-name>`  
+Cargo: `{ git = "https://github.com/estrandv/<crate>.git", branch = "master" }`
 
 ## Commands
 
@@ -116,6 +124,6 @@ When adding a TODO in code, add it to the doc too.
 
 ### git-deps-only
 Never use `path = "../other-crate"` in Cargo.toml. Always use git dependencies
-(`git = "https://github.com/estrandv/repo.git", branch = "master"`) or proper
-crates.io releases. Path dependencies only work on the developer's machine and
-break for anyone else cloning the repo.
+with `branch = "master"` — never pin to a specific `rev` or `tag`.
+Path dependencies only work on the developer's machine; pinned revs break when
+the dependency is updated. crates.io releases are acceptable when available.
