@@ -240,15 +240,32 @@ pub fn terminate() {
 
 /// Terminate and re-launch the suite.
 pub fn restart() {
+    let cfg = config::load();
+    let addr = format!("{}:{}", cfg.control_address, cfg.control_port);
+
     terminate();
-    std::thread::sleep(std::time::Duration::from_millis(2000));
-    // Spawn jdw all in the background
+
+    // Wait for the old suite to release the control port
+    for _ in 0..50 {
+        match std::net::TcpStream::connect_timeout(
+            &addr.parse().unwrap(),
+            std::time::Duration::from_millis(200),
+        ) {
+            Ok(_) => {
+                // Port still open — suite hasn't shut down yet
+                std::thread::sleep(std::time::Duration::from_millis(200));
+            }
+            Err(_) => break, // Port closed — suite is down
+        }
+    }
+
+    // Spawn fresh suite in background
     let exe = std::env::current_exe().unwrap_or_else(|_| "jdw".into());
     std::process::Command::new(exe)
         .arg("all")
         .spawn()
         .expect("failed to restart suite");
-    println!("Suite restarting...");
+    println!("Suite restarted.");
 }
 
 /// Non-real-time recording: render a composition to a WAV file.
