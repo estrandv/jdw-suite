@@ -13,17 +13,14 @@ jobs:
           - target: x86_64-unknown-linux-gnu
             os: ubuntu-latest
             ext: ""
-            sc_install: sudo apt-get update && sudo apt-get install -y supercollider
 
           - target: aarch64-apple-darwin
             os: macos-latest
             ext: ""
-            sc_install: brew install supercollider
 
           - target: x86_64-apple-darwin
             os: macos-13
             ext: ""
-            sc_install: brew install supercollider
 
     runs-on: ${{ matrix.os }}
 
@@ -38,9 +35,6 @@ jobs:
       - name: Git auth for Cargo deps
         run: |
           git config --global 'http.https://github.com/.extraheader' 'AUTHORIZATION: Bearer ${{ secrets.GITHUB_TOKEN }}'
-
-      - name: Install SuperCollider
-        run: ${{ matrix.sc_install }}
 
       - name: Build
         run: cargo build --release --target ${{ matrix.target }}
