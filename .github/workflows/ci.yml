@@ -35,6 +35,10 @@ jobs:
         with:
           targets: ${{ matrix.target }}
 
+      - name: Build
+        env:
+          CARGO_NET_GIT_FETCH_WITH_CLI: "true"
+
       - name: Install SuperCollider
         run: ${{ matrix.sc_install }}
 
