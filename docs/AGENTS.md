@@ -17,6 +17,7 @@ crate is on `master` branch; we always use latest, never pin to specific revs.
 | `jdw-osc-router` | Service | Routes OSC messages between components |
 | `jdw-sequencer` | Service | Beat-synchronous sequencer |
 | `jdw-sc` | Service | SuperCollider wrapper + NRT rendering |
+| `jdw-songs` | Data | `.bbd` songs, synthdefs, synth templates (private) |
 
 GitHub: `https://github.com/estrandv/<crate-name>`  
 Cargo: `{ git = "https://github.com/estrandv/<crate>.git", branch = "master" }`
@@ -32,6 +33,7 @@ are the reference implementation and source of truth for business logic:
 | `jdw-billboarding-lib` | `jdw-billboarding-backend` (parsing, OSC conversion) |
 | `shuttle-notation-python` | shuttle parser in `jdw-billboarding-backend` |
 | `jdw-helper-scripts` | `scripts/` in `jdw-suite` |
+| `jdw-pycompose/songs/` + `scd/` | `jdw-songs` (private) |
 
 All hand-written by the same author. When in doubt about behavior, diff against
 the Python output. The old_method SCD exports live at
