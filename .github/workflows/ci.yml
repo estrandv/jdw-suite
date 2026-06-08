@@ -37,8 +37,8 @@ jobs:
 
       - name: Build
         env:
-          GIT_CONFIG_NOSYSTEM: "1"
-          GIT_CONFIG_GLOBAL: "/dev/null"
+          CARGO_NET_GIT_FETCH_WITH_CLI: "true"
+          GIT_ASKPASS: "echo"
         run: cargo build --release --target ${{ matrix.target }}
 
       - name: Package
