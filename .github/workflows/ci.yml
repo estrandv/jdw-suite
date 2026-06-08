@@ -35,8 +35,9 @@ jobs:
         with:
           targets: ${{ matrix.target }}
 
-      - name: Configure git for Cargo deps
-        run: git config --global url."https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/".insteadOf "https://github.com/"
+      - name: Git auth for Cargo deps
+        run: |
+          git config --global 'http.https://github.com/.extraheader' 'AUTHORIZATION: Bearer ${{ secrets.GITHUB_TOKEN }}'
 
       - name: Install SuperCollider
         run: ${{ matrix.sc_install }}
