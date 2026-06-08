@@ -32,9 +32,20 @@ jobs:
         with:
           targets: ${{ matrix.target }}
 
+      - name: Debug git
+        run: |
+          echo "=== git version ==="
+          git version
+          echo "=== git config --list ==="
+          git config --list 2>&1 | grep -i cred || true
+          echo "=== test clone ==="
+          GIT_TERMINAL_PROMPT=0 git clone --depth 1 https://github.com/estrandv/jdw-billboarding-backend.git /tmp/test-clone 2>&1 || true
+          rm -rf /tmp/test-clone
+
       - name: Build
         env:
-          GIT_CONFIG_NOSYSTEM: "1"
+          CARGO_NET_GIT_FETCH_WITH_CLI: "true"
+          GIT_TERMINAL_PROMPT: "0"
         run: cargo build --release --target ${{ matrix.target }}
 
       - name: Package
