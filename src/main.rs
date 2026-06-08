@@ -1,4 +1,4 @@
-#![feature(result_flattening, proc_macro_hygiene, decl_macro)]
+#![feature(proc_macro_hygiene)]
 
 use clap::{CommandFactory, Parser, Subcommand};
 
