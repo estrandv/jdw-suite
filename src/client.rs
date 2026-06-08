@@ -241,25 +241,19 @@ pub fn terminate() {
 /// Terminate and re-launch the suite.
 pub fn restart() {
     let cfg = config::load();
-    let addr = format!("{}:{}", cfg.control_address, cfg.control_port);
 
     terminate();
 
-    // Wait for the old suite to release the control port
+    // Wait for old suite to release its UDP ports (TCP releases faster).
+    // Try binding to the sequencer's port as a canary.
+    let canary = format!("{}:14441", cfg.control_address);
     for _ in 0..50 {
-        match std::net::TcpStream::connect_timeout(
-            &addr.parse().unwrap(),
-            std::time::Duration::from_millis(200),
-        ) {
-            Ok(_) => {
-                // Port still open — suite hasn't shut down yet
-                std::thread::sleep(std::time::Duration::from_millis(200));
-            }
-            Err(_) => break, // Port closed — suite is down
+        if std::net::UdpSocket::bind(&canary).is_ok() {
+            break; // Port free — old suite is fully down
         }
+        std::thread::sleep(std::time::Duration::from_millis(200));
     }
 
-    // Spawn fresh suite in background
     let exe = std::env::current_exe().unwrap_or_else(|_| "jdw".into());
     std::process::Command::new(exe)
         .arg("all")
