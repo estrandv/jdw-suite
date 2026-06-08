@@ -21,6 +21,22 @@ crate is on `master` branch; we always use latest, never pin to specific revs.
 GitHub: `https://github.com/estrandv/<crate-name>`  
 Cargo: `{ git = "https://github.com/estrandv/<crate>.git", branch = "master" }`
 
+## Python Heritage
+
+The Rust ecosystem replaces a fully working Python "stable alpha" — these repos
+are the reference implementation and source of truth for business logic:
+
+| Python repo | Replaced by |
+|---|---|
+| `jdw-pycompose` | `jdw-suite` (orchestration, NRT, live play) |
+| `jdw-billboarding-lib` | `jdw-billboarding-backend` (parsing, OSC conversion) |
+| `shuttle-notation-python` | shuttle parser in `jdw-billboarding-backend` |
+| `jdw-helper-scripts` | `scripts/` in `jdw-suite` |
+
+All hand-written by the same author. When in doubt about behavior, diff against
+the Python output. The old_method SCD exports live at
+`~/tmp/nrt_bug_export/old_method/` for NRT comparison.
+
 ## Commands
 
 | Command | Status | What it does |
