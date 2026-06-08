@@ -113,3 +113,9 @@ and only with a comment explaining why the code is kept.
 Code-level `// TODO` comments must have a corresponding entry in
 `docs/TODO.md`. This prevents TODOs from being forgotten in source files.
 When adding a TODO in code, add it to the doc too.
+
+### git-deps-only
+Never use `path = "../other-crate"` in Cargo.toml. Always use git dependencies
+(`git = "https://github.com/estrandv/repo.git", branch = "master"`) or proper
+crates.io releases. Path dependencies only work on the developer's machine and
+break for anyone else cloning the repo.
