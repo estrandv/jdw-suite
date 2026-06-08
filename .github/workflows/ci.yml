@@ -5,6 +5,9 @@ on:
     tags: ["v*"]
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   build:
     strategy:
@@ -33,9 +36,10 @@ jobs:
           targets: ${{ matrix.target }}
 
       - name: Build
-        run: |
-          git config --global url."https://${{ secrets.GITHUB_TOKEN }}:${{ secrets.GITHUB_TOKEN }}@github.com".insteadOf https://github.com
-          cargo build --release --target ${{ matrix.target }}
+        env:
+          GIT_CONFIG_NOSYSTEM: "1"
+          GIT_CONFIG_GLOBAL: "/dev/null"
+        run: cargo build --release --target ${{ matrix.target }}
 
       - name: Package
         run: |
