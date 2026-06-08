@@ -5,7 +5,9 @@
 #   1. Verifies tests pass
 #   2. Builds release binary
 #   3. Tags, pushes
-#   4. Creates GitHub Release with binary + assets
+#
+# CI (ci.yml) picks up the tag, builds platform binaries, and uploads
+# them to the GitHub Release automatically.
 #
 # Usage: ./scripts/release.sh
 
@@ -46,12 +48,8 @@ cargo build --release || { echo "Build failed!"; exit 1; }
 
 # ── Confirm ───────────────────────────────────────────────────────
 echo ""
-echo "Ready to release $tag. Assets:"
-echo "  - target/release/jdw"
-echo "  - assets/hello.bbd"
-echo "  - assets/synthdefs.scd"
-echo "  - assets/example.jdw.toml"
-echo "  - assets/install.sh"
+echo "Ready to tag $tag."
+echo "CI will build + upload platform binaries automatically."
 read -p "Proceed? [Y/n] " confirm
 if [[ ! "$confirm" =~ ^[Yy]?$ ]]; then
     echo "Aborted."
@@ -65,20 +63,6 @@ git tag -d "$tag" 2>/dev/null || true
 git tag "$tag"
 git push origin "$tag"
 
-# ── Create release ────────────────────────────────────────────────
 echo ""
-echo "=== Creating GitHub Release ==="
-gh release create "$tag" \
-    --title "jdw $tag" \
-    --notes "Release $tag." \
-    target/release/jdw \
-    assets/hello.bbd \
-    assets/synthdefs.scd \
-    assets/example.jdw.toml \
-    assets/install.sh
-
-echo ""
+echo "Tag pushed. CI: https://github.com/estrandv/jdw-suite/actions"
 echo "Release: https://github.com/estrandv/jdw-suite/releases/tag/$tag"
-echo "CI:      https://github.com/estrandv/jdw-suite/actions"
-echo ""
-echo "CI will attach platform .zip artifacts automatically."
