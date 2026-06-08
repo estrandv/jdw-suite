@@ -238,6 +238,19 @@ pub fn terminate() {
     }
 }
 
+/// Terminate and re-launch the suite.
+pub fn restart() {
+    terminate();
+    std::thread::sleep(std::time::Duration::from_millis(2000));
+    // Spawn jdw all in the background
+    let exe = std::env::current_exe().unwrap_or_else(|_| "jdw".into());
+    std::process::Command::new(exe)
+        .arg("all")
+        .spawn()
+        .expect("failed to restart suite");
+    println!("Suite restarting...");
+}
+
 /// Non-real-time recording: render a composition to a WAV file.
 pub fn nrt_record(file: &str) {
     let bb = match jdw_billboarding_backend::parse_billboard_file(file) {

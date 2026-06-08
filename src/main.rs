@@ -50,6 +50,8 @@ enum Commands {
     },
     /// Shut down the running suite
     Terminate,
+    /// Terminate and re-launch the suite
+    Restart,
     /// Non-real-time recording: render a composition to a WAV file
     Nrt {
         /// Path to a billboard composition file
@@ -80,6 +82,7 @@ fn main() {
         Commands::Stop => client::stop(),
         Commands::Quiet { file } => client::quiet(&file),
         Commands::Terminate => client::terminate(),
+        Commands::Restart => client::restart(),
         Commands::Nrt { file } => client::nrt_record(&file),
     }
 }
