@@ -17,6 +17,12 @@
 - [x] **`jdw all` idempotency** — panic hook logs cleanup reminder.
       Subprocess crate kills children on drop during unwind.
       Orphaned processes from `kill -9` still need manual `pkill scsynth sclang`.
+- [ ] **Supervisor crash handler** — proper subprocess supervision. The suite
+      should hold handles to all spawned subprocesses (router, sclang, scsynth,
+      sequencer), monitor their health, and gracefully kill everything if any one
+      dies. Currently these are spawned deep inside library crates; the suite has
+      no direct handle to them. Requires exposing subprocess handles through each
+      crate's API, or moving process ownership up to the suite level.
 - [ ] **Effect modulation during update** — send `/note_modify` for existing
       effects during `--update` (modifies running effects, not recreate them)
 - [ ] **Tray icon daemon** — `jdw daemon` as a supervisor that spawns, watches,
