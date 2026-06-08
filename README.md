@@ -31,6 +31,7 @@ router subscriptions automatically.
 | `jdw send <file>`    | Queue a composition for playback                 |
 | `jdw stop`           | Stop all playback                                |
 | `jdw setup <file>`   | Load synthdefs and samples for a composition     |
+| `jdw nrt <file>`     | Non-real-time render each track to WAV           |
 | `jdw terminate`      | Shut down the running suite via OSC control port |
 
 ### Options

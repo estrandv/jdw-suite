@@ -8,12 +8,10 @@
 - [x] **Port Python compose logic to Rust** — complete. Sample loading,
       synthdef loading, effects/drones create, command translation, queue
       update, silence drones. Verified against Python for arena.bbd.
-- [ ] **NRT recording** — `jdw nrt <file> <output>` to trigger non-real-time
-      rendering via the SuperCollider wrapper. See
-      `jdw-pycompose/billboard_running.py` `nrt_record()` and
-      `jdw_billboarding/lib/billboard_running.py` `get_nrt_data()`.
-      Requires porting: Score class, NrtData, preload batching,
-      `/nrt_record_info`, `/nrt_record_finished` listener.
+- [x] **NRT recording** — complete. `jdw nrt <file>` renders each track to WAV.
+      Ported Python's Score class, extend_groups, preload batching,
+      /nrt_record_info, /nrt_record_finished listener. See
+      `jdw-billboarding-backend/docs/NRT_OVERVIEW.md`.
 - [ ] **`jdw all` idempotency** — kill existing scsynth/sclang before re-launch
 - [ ] **Effect modulation during update** — send `/note_modify` for existing
       effects during `--update` (modifies running effects, not recreate them)
