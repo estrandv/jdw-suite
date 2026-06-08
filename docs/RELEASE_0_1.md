@@ -139,3 +139,39 @@ the app has a GUI or is distributed outside GitHub.
 Deferred. scsynth and Jack aren't easily available via package managers.
 Config path convention (`~/.config/jdw.toml`) would also need a Windows
 equivalent (`%APPDATA%\jdw\config.toml`). Revisit when there's demand.
+
+## Release Steps
+
+```bash
+# 1. Ensure all tests pass
+cd jdw-billboarding-backend && cargo test
+cd jdw-suite && cargo build --release
+
+# 2. Tag and push
+git tag v0.1.0
+git push origin v0.1.0
+
+# 3. CI builds + uploads artifacts to GitHub Release automatically (ci.yml)
+# 4. Verify the release page has the .zip with all assets
+
+# Manual fallback if CI isn't ready:
+gh release create v0.1.0 \
+    --title "jdw v0.1.0" \
+    --notes "First release. Linux (x86_64), macOS (x86_64+arm64)." \
+    target/release/jdw \
+    assets/hello.bbd \
+    assets/synthdefs.scd \
+    assets/example.jdw.toml \
+    assets/install.sh
+```
+
+## Asset Files
+
+All in `assets/`:
+
+| File | Purpose |
+|---|---|
+| `hello.bbd` | Simple demo song |
+| `synthdefs.scd` | Pluck synthdef |
+| `example.jdw.toml` | Config template |
+| `install.sh` | Install to standard system paths |

@@ -1,0 +1,9 @@
+/set_bpm 120
+
+DEFAULT sus0.5,amp0.4
+
+>>> main
+
+@pluck:main
+
+(c4 d4 e4 f4 g4 a4 b4 c5):1,tot4
