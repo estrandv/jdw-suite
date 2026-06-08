@@ -3,6 +3,7 @@ name: Release
 on:
   push:
     tags: ["v*"]
+  workflow_dispatch:
 
 jobs:
   build:
@@ -11,14 +12,17 @@ jobs:
         include:
           - target: x86_64-unknown-linux-gnu
             os: ubuntu-latest
+            ext: ""
             sc_install: sudo apt-get update && sudo apt-get install -y supercollider
-
-          - target: x86_64-apple-darwin
-            os: macos-latest
-            sc_install: brew install supercollider
 
           - target: aarch64-apple-darwin
             os: macos-latest
+            ext: ""
+            sc_install: brew install supercollider
+
+          - target: x86_64-apple-darwin
+            os: macos-13
+            ext: ""
             sc_install: brew install supercollider
 
     runs-on: ${{ matrix.os }}
@@ -40,7 +44,7 @@ jobs:
       - name: Package
         run: |
           mkdir release
-          cp target/${{ matrix.target }}/release/jdw release/
+          cp target/${{ matrix.target }}/release/jdw${{ matrix.ext }} release/
           cp assets/hello.bbd release/
           cp assets/synthdefs.scd release/
           cp assets/example.jdw.toml release/
