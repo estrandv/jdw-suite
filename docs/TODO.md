@@ -64,6 +64,8 @@
 ### jdw-sequencer
 
 - [x] `sequencing_daemon.rs:131` — `.clone()` removed. `tick()` returns owned data.
+- [x] `master_sequencer.rs:215` — `capacity()` → `len()`. Was returning HashMap allocation size instead of entry count.
+- [x] `regex_search_node_ids` / `regex_clear_node_ids` — compiled Regex now cached in `NodeIDRegistry`.
 - [ ] Multiple `Utc::now()` syscalls per tick — consolidate.
 
 ### Cross-cutting
@@ -89,7 +91,7 @@ Scattered across repos in source files. Collected here for visibility.
 | `osc_daemon.rs` | 150 | Adapt new OSC conversion when everything is converted |
 | `osc_daemon.rs` | 295 | Legacy internal OSC conversion, works but messy |
 | `osc_daemon.rs` | 380 | NRT recording is synchronous, blocks everything else |
-| `osc_daemon.rs` | 447 | Buffer sizes should match struct declarations |
+| `osc_daemon.rs` | 447 | Buffer sizes already match (both 333072 from config) |
 
 ### jdw-sequencer
 
@@ -97,7 +99,7 @@ Scattered across repos in source files. Collected here for visibility.
 |---|---|---|
 | `master_sequencer.rs` | 187 | Thread safety concern in overshoot handling |
 | `master_sequencer.rs` | 201 | Experimental start-reset — possible overshoot bug |
-| `master_sequencer.rs` | 215 | `capacity()` returns wrong value (HashMap allocation, not entries) |
+| `master_sequencer.rs` | 215 | Fixed: `capacity()` → `len()` (HashMap allocation, not entries) |
 | `master_sequencer.rs` | 256 | More start mode tests needed |
 | `master_sequencer.rs` | 311 | Debug output to paste into test |
 | `bundle_model.rs` | 14 | Bundle model usage docs: receive → mark → clear |
