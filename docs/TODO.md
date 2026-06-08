@@ -63,7 +63,7 @@
 
 ### jdw-sequencer
 
-- [ ] `sequencing_daemon.rs:131` — uncertain `.clone()` on tick result.
+- [x] `sequencing_daemon.rs:131` — `.clone()` removed. `tick()` returns owned data.
 - [ ] Multiple `Utc::now()` syscalls per tick — consolidate.
 
 ### Cross-cutting
@@ -101,16 +101,16 @@ Scattered across repos in source files. Collected here for visibility.
 | `master_sequencer.rs` | 256 | More start mode tests needed |
 | `master_sequencer.rs` | 311 | Debug output to paste into test |
 | `bundle_model.rs` | 14 | Bundle model usage docs: receive → mark → clear |
-| `sequencing_daemon.rs` | 38 | Composite payload note (end_beat for queue) |
-| `sequencing_daemon.rs` | 108 | Stop request handling |
+| `sequencing_daemon.rs` | 131 | `.clone()` removed — tick returns owned data |
 | `sequencing_daemon.rs` | 113 | State machine needed? |
-| `sequencing_daemon.rs` | 131 | Unnecessary `.clone()` on tick result |
+| `sequencing_daemon.rs` | 108 | Stop request handling |
+| `sequencing_daemon.rs` | 38 | Composite payload note (end_beat for queue) |
 
 ### jdw-billboarding-backend
 
 | File | Line | Note |
 |---|---|---|
-| `listener.rs` | 184 | Hack: finding port from listener without proper API |
+| `listener.rs` | 184 | Added `port()` method, test uses it directly |
 
 ### jdw-osc-lib
 
