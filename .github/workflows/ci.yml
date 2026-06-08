@@ -34,7 +34,7 @@ jobs:
 
       - name: Build
         run: |
-          git config --global url."https://${{ secrets.GITHUB_TOKEN }}@github.com".insteadOf https://github.com
+          git config --global url."https://${{ secrets.GITHUB_TOKEN }}:${{ secrets.GITHUB_TOKEN }}@github.com".insteadOf https://github.com
           cargo build --release --target ${{ matrix.target }}
 
       - name: Package
