@@ -121,7 +121,8 @@ failed to authenticate when downloading repository
 ```
 
 Proper fix: publish each crate to crates.io, switch jdw-suite to normal
-version deps. Until then, use `scripts/release.sh` for local builds.
+version deps. Until then, `scripts/release.sh` builds + uploads from the local
+machine (Linux-only; macOS builds need cross-compilation or a Mac).
 
 ## macOS Codesigning
 
