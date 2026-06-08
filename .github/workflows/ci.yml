@@ -21,10 +21,6 @@ jobs:
             os: macos-latest
             ext: ""
 
-          - target: x86_64-apple-darwin
-            os: macos-13
-            ext: ""
-
     runs-on: ${{ matrix.os }}
 
     steps:
