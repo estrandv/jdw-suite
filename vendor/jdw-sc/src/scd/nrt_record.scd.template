@@ -1,0 +1,32 @@
+var server, buf, opts;
+
+TempoClock.default.tempo = {:bpm}/60;
+
+opts = ServerOptions.new;
+opts.numOutputBusChannels = 2;
+opts.numInputBusChannels = 2;
+opts.sampleRate = 48000;
+
+server = Server(\nrt,
+    options: opts
+);
+
+//server.latency = 0.05;
+
+// TODO: Pretty sure buffers are added in score now - but this is how a bus would be added, too! 
+buf = Buffer.new(server, 0, 1);
+
+a = Score([
+    {:score_rows}
+]); // testcomment
+
+a.recordNRT(
+    outputFilePath: "{:file_name}".standardizePath,
+    headerFormat: "wav",
+    sampleFormat: "int16",
+    options: server.options,
+    duration: {:end_time},
+    action: { {:out_socket_name}.sendMsg("/nrt_done", "ok"); }
+);
+
+server.remove;

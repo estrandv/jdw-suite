@@ -110,22 +110,18 @@ Merge + playback of all NRT tracks:
   Jack audio setup per platform. See https://supercollider.github.io/downloads
 - No Python, Rust toolchain, or other services required.
 
-## CI (`ci.yml`)
+## CI
 
-GitHub Actions matrix build using `taiki-e/upload-rust-binary-action` (same
-approach as tree-sitter repos). On tag push (`v*`): build, package, create
-GitHub Release with artifacts.
+**Disabled.** GitHub Actions can't clone Cargo git dependencies from public
+repos — libgit2's credential chain fails regardless of config. Every approach
+tried (url.insteadOf, extraheader, GIT_CONFIG_NOSYSTEM, GIT_ASKPASS) hits:
 
-Matrix:
-- **Linux** x86_64 (ubuntu-latest)
-- **macOS** x86_64 + arm64 (macos-latest)
+```
+failed to authenticate when downloading repository
+```
 
-Steps:
-1. Checkout with git dependencies
-2. `sudo apt install supercollider` / `brew install supercollider`
-3. `cargo build --release`
-4. Copy binary + assets into platform `.zip`
-5. Upload to release
+Proper fix: publish each crate to crates.io, switch jdw-suite to normal
+version deps. Until then, use `scripts/release.sh` for local builds.
 
 ## macOS Codesigning
 
