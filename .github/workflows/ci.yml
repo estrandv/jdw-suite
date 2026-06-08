@@ -33,6 +33,8 @@ jobs:
           targets: ${{ matrix.target }}
 
       - name: Build
+        env:
+          CARGO_NET_GIT_FETCH_WITH_CLI: "true"
         run: cargo build --release --target ${{ matrix.target }}
 
       - name: Package
