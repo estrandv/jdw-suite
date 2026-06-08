@@ -64,18 +64,19 @@ utilities. Used by all Rust services.
 
 ### jdw-billboarding-backend
 
-Rust-native composition parser. Reads mini-billboard files
-(`trackname:synthname arg=val (shuttle notation)`) and converts them to OSC
-messages for the suite. Contains a hand-written Shuttle Notation parser
-(atomic notes, sections, alternations, repeats, args) and OSC message
-builders for queue update, setup, and stop.
+Rust-native composition parser. Reads `.bbd` files (full billboard notation:
+sections, shuttle notation, macros, commands, effects, drones, group filters)
+and converts them to OSC messages. Contains a hand-written Shuttle Notation
+parser (atomic notes, sections, alternations, repeats, args), an NRT Score
+class for non-real-time recording, and OSC message builders for queue update,
+setup, play, and NRT.
 
 ### jdw-suite
 
 The single-binary facade. Provides:
 - **Launch commands** — `all`, `router`, `sc`, `sequencer` — that spawn
   services in threads and coordinate startup
-- **Client commands** — `send`, `stop`, `setup`, `terminate` — that send
+- **Client commands** — `send`, `stop`, `setup`, `nrt`, `terminate` — that send
   OSC messages to a running suite
 - **OSC control listener** — a thread that listens on a configurable control
   port (default `127.0.0.1:13340`) for management commands like `/shutdown`
