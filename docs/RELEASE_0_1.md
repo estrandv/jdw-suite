@@ -1,18 +1,41 @@
 # Release 0.1 Plan
 
-First downloadable release of `jdw-suite`.
+First downloadable release of `jdw-suite`. Target: Linux (primary), macOS (secondary).
 
 ## Artifact
-
-A `.zip` per platform containing:
 
 ```
 jdw-v0.1-linux-x86_64.zip
 ├── jdw                           # binary
-├── example.jdw.toml              # minimal config (user copies to ~/.config/jdw.toml)
-├── hello.bbd                     # simple song: one synth, one melody
-├── synthdefs.scd                 # minimal synthdefs needed by hello.bbd
-└── README.txt                    # quick-start instructions
+├── install.sh                    # copies files to standard dirs, adds to PATH
+├── hello.bbd                     # simple song
+├── synthdefs.scd                 # minimal synthdefs
+├── example.jdw.toml              # config template
+└── README.txt
+```
+
+## install.sh
+
+```bash
+#!/usr/bin/env bash
+# Install jdw: copy binary to /usr/local/bin, config to ~/.config, synthdefs to
+# a standard location.
+set -e
+
+# Binary
+sudo cp jdw /usr/local/bin/jdw
+sudo chmod +x /usr/local/bin/jdw
+
+# Config
+mkdir -p ~/.config
+cp example.jdw.toml ~/.config/jdw.toml
+
+# Synthdefs
+mkdir -p /usr/local/share/jdw
+cp synthdefs.scd /usr/local/share/jdw/
+
+echo "Installed. Edit ~/.config/jdw.toml to set synthdefs_scd_path."
+echo "Run: jdw all"
 ```
 
 ## hello.bbd
@@ -31,12 +54,11 @@ DEFAULT sus0.5,amp0.4
 (c4 d4 e4 f4 g4 a4 b4 c5):1,tot4
 ```
 
-One filter (`>>> main`), one track, ascending C-major scale looped once. No
-effects, no drones, no macros — minimal dependency surface.
+No effects, drones, or macros — minimal dependency surface.
 
 ## synthdefs.scd
 
-Just the `pluck` synthdef (same one from the full synthdefs):
+Just `pluck`:
 
 ```
 SynthDef("pluck", { |freq=440, amp=0.5, gate=1, out=0, pan=0, attT=0.001, decT=0.25, susL=0.0, relT=0.001, cut=5500, res=0.15, dur=0.25, fEnv=1.0, fSus=1.0, lfoS=0.5, lfoD=0.0|
@@ -53,80 +75,67 @@ SynthDef("pluck", { |freq=440, amp=0.5, gate=1, out=0, pan=0, attT=0.001, decT=0
 
 ```toml
 [pycompose]
-bbd_root = "."
-synthdefs_scd_path = "./synthdefs.scd"
-template_synths_path = "./synthdefs.scd"
+bbd_root = "/usr/local/share/jdw"
+synthdefs_scd_path = "/usr/local/share/jdw/synthdefs.scd"
+template_synths_path = "/usr/local/share/jdw/synthdefs.scd"
 sample_pack_dir = "~/sample_packs"
 nrt_output_dir = "./output"
 ```
 
-## CI (`ci.yml`)
-
-GitHub Actions matrix build using `taiki-e/upload-rust-binary-action` (same
-approach as tree-sitter repos). Builds per platform, creates GitHub Release
-on tag push.
-
-Matrix:
-- **Linux** x86_64 (ubuntu-latest)
-- **macOS** x86_64 + arm64 (macos-latest)
-- ~~Windows~~ deferred (scsynth not easily available)
-
-Steps per job:
-1. Checkout with submodules/git deps
-2. Install SuperCollider (`sudo apt install supercollider` / `brew install supercollider`)
-3. `cargo build --release`
-4. Package: `jdw` binary + example files → `.zip`
-5. Upload to GitHub Release (on `v*` tag)
-
-## Zip Contents
+## README.txt (in zip)
 
 ```
-jdw-v0.1-linux-x86_64.zip
-├── jdw                      # release binary
-├── hello.bbd                # simple song
-├── synthdefs.scd            # minimal synthdefs
-├── example.jdw.toml         # config template
-├── run.sh                   # one-step: all + setup + play
-└── README.txt               # quick-start
-```
+Quick Start
+===========
 
-## run.sh
-
-```bash
-#!/usr/bin/env bash
-# One-step: launch suite, setup, and play a song.
-# Usage: ./run.sh [song.bbd]   (defaults to hello.bbd)
-set -e
-SONG="${1:-hello.bbd}"
-./jdw all &
-sleep 3
-./jdw setup "$SONG"
-sleep 2
-./jdw play "$SONG"
-wait
-```
-
-## User Quick-Start (README.txt in zip)
-
-```
 1. Install SuperCollider: https://supercollider.github.io/downloads
-2. Copy example.jdw.toml to ~/.config/jdw.toml
-3. Run:  ./jdw all          (starts the suite)
-4. Run:  ./jdw setup hello.bbd
-5. Run:  ./jdw play hello.bbd
-6. Listen! Ctrl-C to stop.
+   This also installs Jack audio server if needed. Follow their platform guide.
+2. Run: ./install.sh
+3. Run: jdw all          (starts the suite)
+4. In another terminal:
+   jdw setup hello.bbd
+   jdw play hello.bbd
+5. Listen! Ctrl-C to stop.
 
-For WAV export:
-7. Run:  ./jdw nrt hello.bbd   (writes to ./output/)
+WAV export:
+   jdw nrt hello.bbd     (writes to ./output/)
+
+Merge + playback of all NRT tracks:
+   scripts/merge-nrt.sh
 ```
 
 ## Dependencies (user must install)
 
-- **SuperCollider** (`sclang` and `scsynth` on PATH)
-- No Python, no Rust toolchain, no other services
+- **SuperCollider** — `sclang` and `scsynth` on PATH. Their installer handles
+  Jack audio setup per platform. See https://supercollider.github.io/downloads
+- No Python, Rust toolchain, or other services required.
 
-## Open Questions
+## CI (`ci.yml`)
 
-- macOS codesigning? (requires Apple Developer account)
-- Windows: scsynth not available via winget — bundle it?
-- Jack audio server required on Linux? (currently uses default SC audio backend)
+GitHub Actions matrix build using `taiki-e/upload-rust-binary-action` (same
+approach as tree-sitter repos). On tag push (`v*`): build, package, create
+GitHub Release with artifacts.
+
+Matrix:
+- **Linux** x86_64 (ubuntu-latest)
+- **macOS** x86_64 + arm64 (macos-latest)
+
+Steps:
+1. Checkout with git dependencies
+2. `sudo apt install supercollider` / `brew install supercollider`
+3. `cargo build --release`
+4. Copy binary + assets into platform `.zip`
+5. Upload to release
+
+## macOS Codesigning
+
+Not needed for a CLI binary distributed as a `.zip`. Users may need to run
+`xattr -d com.apple.quarantine jdw` the first time (Gatekeeper). Official
+codesigning requires an Apple Developer account ($99/year) — defer until
+the app has a GUI or is distributed outside GitHub.
+
+## Windows
+
+Deferred. scsynth and Jack aren't easily available via package managers.
+Config path convention (`~/.config/jdw.toml`) would also need a Windows
+equivalent (`%APPDATA%\jdw\config.toml`). Revisit when there's demand.
