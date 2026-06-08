@@ -35,7 +35,9 @@ jobs:
       - name: Build
         env:
           CARGO_NET_GIT_FETCH_WITH_CLI: "true"
-        run: cargo build --release --target ${{ matrix.target }}
+        run: |
+          git config --global --unset-all credential.helper 2>/dev/null || true
+          cargo build --release --target ${{ matrix.target }}
 
       - name: Package
         run: |
