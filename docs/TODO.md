@@ -23,6 +23,8 @@
       dies. Currently these are spawned deep inside library crates; the suite has
       no direct handle to them. Requires exposing subprocess handles through each
       crate's API, or moving process ownership up to the suite level.
+      **Also enables per-service restart** (`jdw restart sequencer`, etc.)
+      instead of the current all-or-nothing `jdw restart`.
 - [ ] **Effect modulation during update** — send `/note_modify` for existing
       effects during `--update` (modifies running effects, not recreate them)
 - [ ] **Tray icon daemon** — `jdw daemon` as a supervisor that spawns, watches,
