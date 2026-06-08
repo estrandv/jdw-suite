@@ -42,10 +42,11 @@ jobs:
         run: |
           mkdir release
           cp target/${{ matrix.target }}/release/jdw${{ matrix.ext }} release/
-          cp assets/hello.bbd release/
+          cp assets/hello.bbd assets/hello_sampler.bbd release/
           cp assets/synthdefs.scd release/
           cp assets/example.jdw.toml release/
           cp assets/install.sh release/
+          cp -r assets/sample_packs release/
           cd release && zip -r ../jdw-v0.1-${{ matrix.target }}.zip .
 
       - name: Upload to Release

@@ -2,5 +2,5 @@
 bbd_root = "/usr/local/share/jdw"
 synthdefs_scd_path = "/usr/local/share/jdw/synthdefs.scd"
 template_synths_path = "/usr/local/share/jdw/synthdefs.scd"
-sample_pack_dir = "~/sample_packs"
+sample_pack_dir = "/usr/local/share/jdw/sample_packs"
 nrt_output_dir = "./output"

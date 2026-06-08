@@ -23,10 +23,14 @@ else
     echo "  ~/.config/jdw.toml already exists, skipping"
 fi
 
-# Synthdefs
+# Synthdefs + sample packs
 sudo mkdir -p /usr/local/share/jdw
 sudo cp synthdefs.scd /usr/local/share/jdw/
 echo "  synthdefs.scd -> /usr/local/share/jdw/synthdefs.scd"
+if [[ -d sample_packs ]]; then
+    sudo cp -r sample_packs /usr/local/share/jdw/
+    echo "  sample_packs -> /usr/local/share/jdw/sample_packs"
+fi
 
 echo ""
 echo "Done. Run: jdw all"
