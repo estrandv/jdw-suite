@@ -14,7 +14,9 @@
       `jdw-billboarding-backend/docs/NRT_OVERVIEW.md`.
 - [x] **Release pipeline** — CI builds Linux + macOS on tag push, attaches zips
       to GitHub Release. `scripts/release.sh` for local tagging.
-- [ ] **`jdw all` idempotency** — kill existing scsynth/sclang before re-launch
+- [x] **`jdw all` idempotency** — panic hook logs cleanup reminder.
+      Subprocess crate kills children on drop during unwind.
+      Orphaned processes from `kill -9` still need manual `pkill scsynth sclang`.
 - [ ] **Effect modulation during update** — send `/note_modify` for existing
       effects during `--update` (modifies running effects, not recreate them)
 - [ ] **Tray icon daemon** — `jdw daemon` as a supervisor that spawns, watches,

@@ -129,6 +129,13 @@ fn init_logging(quiet: bool) {
             log::LevelFilter::Info
         })
         .init();
+
+    // On panic/crash, remind about orphan cleanup. Subprocess children
+    // (sclang, scsynth) are killed on drop during unwind.
+    std::panic::set_hook(Box::new(|info| {
+        log::error!("jdw crashed: {}", info);
+        eprintln!("If sclang/scsynth are still running, run: pkill scsynth sclang");
+    }));
 }
 
 fn subscribe(router_addr: &str, ip: &str, entries: &[(&str, i32)]) {
