@@ -99,6 +99,11 @@ value lives in `~/.config/jdw.toml` with a default in the relevant crate's
 `config.rs`. If you need a new value, add it to the config struct, the TOML
 merge logic, and the default — then reference it from there.
 
+The live config at `~/.config/jdw.toml` is the canonical master copy.
+`assets/example.jdw.toml` is a sanitized snapshot of it (absolute paths,
+no user-specific home dirs) for distribution. When adding a new key,
+always add it to the live config first, then copy to the example.
+
 ### plan-tracking
 When a task in `docs/TODO.md`, `docs/RELEASE_0_1.md`, or any other plan doc is
 completed, update the source document. Stale docs are worse than no docs. This
