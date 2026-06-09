@@ -4,6 +4,9 @@
 # Per-app config.toml files in each project directory override
 # these values. Compiled-in defaults are the final fallback.
 
+[network]
+router_port = 13339
+
 [router]
 bind_address = "127.0.0.1"
 bind_port = 13339
@@ -34,6 +37,8 @@ sample_buffer_frames = 352800.0
 sample_channels = 2
 group_id = 0
 group_placement = 0
+beep_frequencies = [130.81, 146.83, 196.0]
+beep_spacing_ms = 125
 
 [sequencer]
 application_ip = "127.0.0.1"
@@ -70,6 +75,8 @@ quiet = 0.005
 [suite]
 control_port = 13340
 control_address = "127.0.0.1"
+nrt_listener_port_base = 13456
+sequencer_in_port = 14441
 
 [helper-scripts]
 python = "$HOME/mypython/bin/python"

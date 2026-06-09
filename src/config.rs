@@ -1,12 +1,19 @@
 use serde::Deserialize;
 use std::path::PathBuf;
 
+pub const DEFAULT_SAMPLE_PACK_DIR: &str = "/usr/local/share/jdw/sample_packs";
+pub const DEFAULT_NRT_OUTPUT_DIR: &str = "./output";
+
 #[derive(Debug, Clone, Deserialize)]
 pub struct SuiteConfig {
     #[serde(default = "default_control_port")]
     pub control_port: u16,
     #[serde(default = "default_control_address")]
     pub control_address: String,
+    #[serde(default = "default_nrt_listener_port_base")]
+    pub nrt_listener_port_base: u16,
+    #[serde(default = "default_sequencer_in_port")]
+    pub sequencer_in_port: u16,
 }
 
 fn default_control_port() -> u16 {
@@ -17,11 +24,21 @@ fn default_control_address() -> String {
     "127.0.0.1".to_string()
 }
 
+fn default_nrt_listener_port_base() -> u16 {
+    13456
+}
+
+fn default_sequencer_in_port() -> u16 {
+    14441
+}
+
 impl Default for SuiteConfig {
     fn default() -> Self {
         SuiteConfig {
             control_port: 13340,
             control_address: "127.0.0.1".to_string(),
+            nrt_listener_port_base: 13456,
+            sequencer_in_port: 14441,
         }
     }
 }

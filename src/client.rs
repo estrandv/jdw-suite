@@ -40,25 +40,25 @@ pub fn play(file: &str) {
     let bb = match jdw_billboarding_backend::parse_billboard_file(file) {
         Ok(bb) => bb,
         Err(e) => {
-            eprintln!("Error parsing {}: {}", file, e);
+            log::error!("Error parsing {}: {}", file, e);
             std::process::exit(1);
         }
     };
 
     let cfg = jdw_billboarding_backend::OscConfig::default();
     if let Err(e) = jdw_billboarding_backend::osc::send_full_queue_update(&bb, &cfg) {
-        eprintln!("Failed to send queue update: {}", e);
+        log::error!("Failed to send queue update: {}", e);
         std::process::exit(1);
     }
     let track_count: usize = bb.sections.iter().map(|s| s.tracks.len()).sum();
-    println!("Sent {} track(s) to the sequencer.", track_count);
+    log::info!("Sent {} track(s) to the sequencer.", track_count);
 }
 
 pub fn setup(file: &str) {
     let bb = match jdw_billboarding_backend::parse_billboard_file(file) {
         Ok(bb) => bb,
         Err(e) => {
-            eprintln!("Error parsing {}: {}", file, e);
+            log::error!("Error parsing {}: {}", file, e);
             std::process::exit(1);
         }
     };
@@ -74,40 +74,40 @@ pub fn setup(file: &str) {
     );
 
     // Load samples from sample pack directory (before synthdefs, matching Python order)
-    let sample_pack_dir = jdw_cfg.sample_pack_dir.as_deref().unwrap_or("~/sample_packs");
+    let sample_pack_dir = jdw_cfg.sample_pack_dir.as_deref().unwrap_or(config::DEFAULT_SAMPLE_PACK_DIR);
     let samples = jdw_billboarding_backend::get_default_samples(sample_pack_dir);
     if !samples.is_empty() {
         if let Err(e) = jdw_billboarding_backend::osc::send_samples(&samples, &osc_cfg) {
-            eprintln!("Failed to send samples: {}", e);
+            log::error!("Failed to send samples: {}", e);
             std::process::exit(1);
         }
     }
 
     if let Err(e) = jdw_billboarding_backend::osc::send_full_setup(&synthdefs, &osc_cfg) {
-        eprintln!("Failed to send setup: {}", e);
+        log::error!("Failed to send setup: {}", e);
         std::process::exit(1);
     }
     if let Err(e) = jdw_billboarding_backend::osc::send_effects_clear(&osc_cfg) {
-        eprintln!("Failed to clear effects: {}", e);
+        log::error!("Failed to clear effects: {}", e);
         std::process::exit(1);
     }
     // Commands (routers) must precede effects/drones — SC bus order is strict
     if let Err(e) = jdw_billboarding_backend::osc::send_full_commands(&bb, &osc_cfg) {
-        eprintln!("Failed to send commands: {}", e);
+        log::error!("Failed to send commands: {}", e);
         std::process::exit(1);
     }
     if let Err(e) = jdw_billboarding_backend::osc::send_effects_create(&bb, &osc_cfg) {
-        eprintln!("Failed to create effects: {}", e);
+        log::error!("Failed to create effects: {}", e);
         std::process::exit(1);
     }
     if let Err(e) = jdw_billboarding_backend::osc::send_drones_create(&bb, &osc_cfg) {
-        eprintln!("Failed to create drones: {}", e);
+        log::error!("Failed to create drones: {}", e);
         std::process::exit(1);
     }
 
     let synthdef_count = synthdefs.len();
     let synth_count = bb.sections.len();
-    println!(
+    log::info!(
         "Setup sent: {} sample(s), {} SynthDef(s), {} synth section(s) in billboard.",
         samples.len(), synthdef_count, synth_count
     );
@@ -122,7 +122,7 @@ pub fn update(file: &str) {
     let bb = match jdw_billboarding_backend::parse_billboard_file(file) {
         Ok(bb) => bb,
         Err(e) => {
-            eprintln!("Error parsing {}: {}", file, e);
+            log::error!("Error parsing {}: {}", file, e);
             std::process::exit(1);
         }
     };
@@ -137,38 +137,38 @@ pub fn update(file: &str) {
         jdw_cfg.bbd_root.as_deref(),
     );
     if let Err(e) = jdw_billboarding_backend::osc::send_full_setup(&synthdefs, &cfg) {
-        eprintln!("Failed to send synthdefs during update: {}", e);
+        log::error!("Failed to send synthdefs during update: {}", e);
         std::process::exit(1);
     }
 
     if let Err(e) = jdw_billboarding_backend::osc::send_effects_clear(&cfg) {
-        eprintln!("Failed to clear effects: {}", e);
+        log::error!("Failed to clear effects: {}", e);
         std::process::exit(1);
     }
     // Commands (routers) must precede effects/drones — SC bus order is strict
     if let Err(e) = jdw_billboarding_backend::osc::send_full_commands(&bb, &cfg) {
-        eprintln!("Failed to send commands: {}", e);
+        log::error!("Failed to send commands: {}", e);
         std::process::exit(1);
     }
     if let Err(e) = jdw_billboarding_backend::osc::send_effects_create(&bb, &cfg) {
-        eprintln!("Failed to create effects: {}", e);
+        log::error!("Failed to create effects: {}", e);
         std::process::exit(1);
     }
     if let Err(e) = jdw_billboarding_backend::osc::send_drones_create(&bb, &cfg) {
-        eprintln!("Failed to create drones: {}", e);
+        log::error!("Failed to create drones: {}", e);
         std::process::exit(1);
     }
 
-    println!("Update sent. Commands configured for {}.", file);
+    log::info!("Update sent. Commands configured for {}.", file);
     beep(0.1);
 }
 
 pub fn stop() {
     let cfg = jdw_billboarding_backend::OscConfig::default();
     match jdw_billboarding_backend::osc::send_stop(&cfg) {
-        Ok(()) => println!("Stop signal sent."),
+        Ok(()) => log::info!("Stop signal sent."),
         Err(e) => {
-            eprintln!("Failed to send stop: {}", e);
+            log::error!("Failed to send stop: {}", e);
             std::process::exit(1);
         }
     }
@@ -179,7 +179,7 @@ pub fn quiet(file: &str) {
 
     // Stop playback first
     if let Err(e) = jdw_billboarding_backend::osc::send_stop(&cfg) {
-        eprintln!("Failed to send stop: {}", e);
+        log::error!("Failed to send stop: {}", e);
         std::process::exit(1);
     }
 
@@ -187,17 +187,17 @@ pub fn quiet(file: &str) {
     let bb = match jdw_billboarding_backend::parse_billboard_file(file) {
         Ok(bb) => bb,
         Err(e) => {
-            eprintln!("Error parsing {}: {}", file, e);
+            log::error!("Error parsing {}: {}", file, e);
             std::process::exit(1);
         }
     };
 
     if let Err(e) = jdw_billboarding_backend::osc::send_silence_drones(&bb, &cfg) {
-        eprintln!("Failed to silence drones: {}", e);
+        log::error!("Failed to silence drones: {}", e);
         std::process::exit(1);
     }
 
-    println!("Quiet completed.");
+    log::info!("Quiet completed.");
 }
 
 pub fn terminate() {
@@ -207,7 +207,7 @@ pub fn terminate() {
     let sock = match UdpSocket::bind("127.0.0.1:0") {
         Ok(s) => s,
         Err(e) => {
-            eprintln!("Failed to open socket: {}", e);
+            log::error!("Failed to open socket: {}", e);
             std::process::exit(1);
         }
     };
@@ -215,7 +215,7 @@ pub fn terminate() {
     let target: SocketAddr = match addr.parse() {
         Ok(a) => a,
         Err(_) => {
-            eprintln!("Invalid control address: {}", addr);
+            log::error!("Invalid control address: {}", addr);
             std::process::exit(1);
         }
     };
@@ -228,11 +228,11 @@ pub fn terminate() {
     let buf = encoder::encode(&msg).unwrap();
     match sock.send_to(&buf, target) {
         Ok(_) => {
-            println!("Shutdown signal sent to suite on {}.", addr);
-            println!("(If the suite was not running, this is a no-op.)");
+            log::info!("Shutdown signal sent to suite on {}.", addr);
+            log::info!("(If the suite was not running, this is a no-op.)");
         }
         Err(e) => {
-            eprintln!("Failed to send shutdown: {}", e);
+            log::error!("Failed to send shutdown: {}", e);
             std::process::exit(1);
         }
     }
@@ -246,7 +246,7 @@ pub fn restart() {
 
     // Wait for old suite to release its UDP ports (TCP releases faster).
     // Try binding to the sequencer's port as a canary.
-    let canary = format!("{}:14441", cfg.control_address);
+    let canary = format!("{}:{}", cfg.control_address, cfg.sequencer_in_port);
     for _ in 0..50 {
         if std::net::UdpSocket::bind(&canary).is_ok() {
             break; // Port free — old suite is fully down
@@ -259,15 +259,17 @@ pub fn restart() {
         .arg("all")
         .spawn()
         .expect("failed to restart suite");
-    println!("Suite restarted.");
+    log::info!("Suite restarted.");
 }
 
 /// Non-real-time recording: render a composition to a WAV file.
 pub fn nrt_record(file: &str) {
+    let suite_cfg = config::load();
+
     let bb = match jdw_billboarding_backend::parse_billboard_file(file) {
         Ok(bb) => bb,
         Err(e) => {
-            eprintln!("Error parsing {}: {}", file, e);
+            log::error!("Error parsing {}: {}", file, e);
             std::process::exit(1);
         }
     };
@@ -281,19 +283,19 @@ pub fn nrt_record(file: &str) {
         jdw_cfg.bbd_root.as_deref(),
     );
 
-    let sample_pack_dir = jdw_cfg.sample_pack_dir.as_deref().unwrap_or("~/sample_packs");
+    let sample_pack_dir = jdw_cfg.sample_pack_dir.as_deref().unwrap_or(config::DEFAULT_SAMPLE_PACK_DIR);
     let samples = jdw_billboarding_backend::get_default_samples(sample_pack_dir);
 
-    let nrt_output_dir = jdw_cfg.nrt_output_dir.as_deref().unwrap_or("~/jdw_output");
+    let nrt_output_dir = jdw_cfg.nrt_output_dir.as_deref().unwrap_or(config::DEFAULT_NRT_OUTPUT_DIR);
     let nrt_output_dir = nrt_output_dir.replacen("~", &std::env::var("HOME").unwrap_or_else(|_| ".".into()), 1);
     let bundles = jdw_billboarding_backend::get_nrt_record_bundles(&bb, &synthdefs, &samples, &nrt_output_dir);
 
     let sock = std::net::UdpSocket::bind("127.0.0.1:0").expect("Failed to bind UDP socket");
 
-    let mut listener_port: u16 = 13456;
+    let mut listener_port: u16 = suite_cfg.nrt_listener_port_base;
 
     for info in &bundles {
-        println!("Recording track: {}", info.track_name);
+        log::info!("Recording track: {}", info.track_name);
 
         // Start listener BEFORE sending main bundle (race: jdw-sc responds fast)
         let listener = match jdw_billboarding_backend::Listener::start(listener_port) {
@@ -303,7 +305,7 @@ pub fn nrt_record(file: &str) {
                 listener_port += 1;
                 jdw_billboarding_backend::Listener::start(listener_port)
                     .unwrap_or_else(|e2| {
-                        eprintln!("  Failed to start listener: {}", e2);
+                        log::error!("  Failed to start listener: {}", e2);
                         std::process::exit(1);
                     })
             }
@@ -317,25 +319,25 @@ pub fn nrt_record(file: &str) {
             addr: "/subscribe".to_string(),
             args: vec![
                 rosc::OscType::String("/nrt_record_finished".to_string()),
-                rosc::OscType::String("127.0.0.1".to_string()),
+                rosc::OscType::String(suite_cfg.control_address.clone()),
                 rosc::OscType::Int(actual_port as i32),
             ],
         });
         let _ = send_osc_json(&sock, &osc_cfg.router_addr, &sub_msg);
         std::thread::sleep(std::time::Duration::from_millis(50));
 
-        eprintln!("  preload_msgs: {} messages", info.preload_messages.len());
+        log::debug!("  preload_msgs: {} messages", info.preload_messages.len());
         for msg in &info.preload_messages {
             if let Err(e) = send_osc_json(&sock, &osc_cfg.router_addr, msg) {
-                eprintln!("  preload msg send error: {}", e);
+                log::error!("  preload msg send error: {}", e);
             }
             std::thread::sleep(std::time::Duration::from_millis(5));
         }
 
-        eprintln!("  preload_bundles: {} bundles", info.preload_bundles.len());
+        log::debug!("  preload_bundles: {} bundles", info.preload_bundles.len());
         for bundle in &info.preload_bundles {
             if let Err(e) = send_osc_json(&sock, &osc_cfg.router_addr, bundle) {
-                eprintln!("  preload bundle send error: {}", e);
+                log::error!("  preload bundle send error: {}", e);
             }
             std::thread::sleep(std::time::Duration::from_millis(5));
         }
@@ -343,38 +345,38 @@ pub fn nrt_record(file: &str) {
         // NRT bundle is metadata-only (all timed data in preload), always fits in UDP
         let nrt_buf = match rosc::encoder::encode(&info.nrt_bundle) {
             Ok(b) => b,
-            Err(e) => { eprintln!("  nrt_record encode error: {}", e); return; }
+            Err(e) => { log::error!("  nrt_record encode error: {}", e); return; }
         };
-        eprintln!("  nrt_record bundle size: {} bytes", nrt_buf.len());
+        log::debug!("  nrt_record bundle size: {} bytes", nrt_buf.len());
 
         let nrt_target: std::net::SocketAddr = match osc_cfg.router_addr.parse() {
             Ok(a) => a,
-            Err(e) => { eprintln!("  nrt_record addr parse error: {}", e); return; }
+            Err(e) => { log::error!("  nrt_record addr parse error: {}", e); return; }
         };
         if let Err(e) = sock.send_to(&nrt_buf, nrt_target) {
-            eprintln!("  nrt_record bundle send error: {}", e);
+            log::error!("  nrt_record bundle send error: {}", e);
         }
 
-        println!("  NRT bundle sent, awaiting response...");
+        log::info!("  NRT bundle sent, awaiting response...");
 
         if listener.wait_for_nrt() {
                 match listener.get_response() {
                     Some((status, filename)) => {
-                        println!("  NRT complete: {} → {}", status, filename);
+                        log::info!("  NRT complete: {} → {}", status, filename);
                     }
                     None => {
-                        eprintln!("  Warning: got response but couldn't parse");
+                        log::warn!("  Got response but couldn't parse");
                     }
                 }
             } else {
-                eprintln!("  Timed out waiting for NRT completion");
+                log::error!("  Timed out waiting for NRT completion");
             }
         // Explicitly drop listener and let port release before next track
         drop(listener);
         std::thread::sleep(std::time::Duration::from_millis(200));
     }
 
-    println!("NRT recording finished. {} track(s) processed.", bundles.len());
+    log::info!("NRT recording finished. {} track(s) processed.", bundles.len());
 }
 
 fn send_osc_json(sock: &std::net::UdpSocket, addr: &str, packet: &rosc::OscPacket) -> Result<(), String> {
