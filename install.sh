@@ -7,6 +7,9 @@ INSTALL_DIR="${XDG_BIN_HOME:-${HOME}/.local/bin}"
 
 cd "$(dirname "$0")"
 
+echo "Updating jdw-billboarding-backend dependency..."
+cargo update -p jdw-billboarding-backend
+
 echo "Building ${BINARY_NAME}..."
 cargo build --release
 

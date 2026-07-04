@@ -92,7 +92,7 @@ pub fn setup(file: &str) {
         std::process::exit(1);
     }
     // Commands (routers) must precede effects/drones — SC bus order is strict
-    if let Err(e) = jdw_billboarding_backend::osc::send_full_commands(&bb, &osc_cfg) {
+    if let Err(e) = jdw_billboarding_backend::osc::send_full_commands(&bb, &osc_cfg, true) {
         log::error!("Failed to send commands: {}", e);
         std::process::exit(1);
     }
@@ -141,17 +141,13 @@ pub fn update(file: &str) {
         std::process::exit(1);
     }
 
-    if let Err(e) = jdw_billboarding_backend::osc::send_effects_clear(&cfg) {
-        log::error!("Failed to clear effects: {}", e);
-        std::process::exit(1);
-    }
     // Commands (routers) must precede effects/drones — SC bus order is strict
-    if let Err(e) = jdw_billboarding_backend::osc::send_full_commands(&bb, &cfg) {
+    if let Err(e) = jdw_billboarding_backend::osc::send_full_commands(&bb, &cfg, false) {
         log::error!("Failed to send commands: {}", e);
         std::process::exit(1);
     }
-    if let Err(e) = jdw_billboarding_backend::osc::send_effects_create(&bb, &cfg) {
-        log::error!("Failed to create effects: {}", e);
+    if let Err(e) = jdw_billboarding_backend::osc::send_effects_modulate(&bb, &cfg) {
+        log::error!("Failed to modulate effects: {}", e);
         std::process::exit(1);
     }
     if let Err(e) = jdw_billboarding_backend::osc::send_drones_create(&bb, &cfg) {

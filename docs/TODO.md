@@ -27,6 +27,8 @@
       instead of the current all-or-nothing `jdw restart`.
 - [ ] **Effect modulation during update** — send `/note_modify` for existing
       effects during `--update` (modifies running effects, not recreate them)
+      — 2026-06-20: implemented (`send_effects_modulate`) but reverted due to
+      sequencer sync regression. Root cause not yet identified.
 - [ ] **Tray icon daemon** — `jdw daemon` as a supervisor that spawns, watches,
       and restarts services, with system tray integration
 - [ ] **Librarization** — both crates already have `[lib]` + `[[bin]]` targets
@@ -56,6 +58,8 @@
 
 - [ ] `subscriber_data` is a `Vec` — O(n) scan per message. Should be
       `HashMap<String, Vec<SocketAddr>>` for O(1) lookup.
+      — 2026-06-20: implemented but reverted due to sequencer sync regression
+      (deployed alongside sequencer & osc-lib changes; not confirmed as cause).
 
 ### jdw-sc
 
@@ -69,12 +73,18 @@
 - [x] `master_sequencer.rs:215` — `capacity()` → `len()`. Was returning HashMap allocation size instead of entry count.
 - [x] `regex_search_node_ids` / `regex_clear_node_ids` — compiled Regex now cached in `NodeIDRegistry`.
 - [ ] Multiple `Utc::now()` syscalls per tick — consolidate.
+      — 2026-06-20: implemented (switched to single `SystemTime::now()`) but
+      reverted due to sync regression. Deployed alongside capacity() and
+      clone() fixes; any could be the cause.
 
 ### Cross-cutting
 
 - [ ] **BigDecimal in hot paths** — switching to integer nanoseconds (`u64`)
       would eliminate heap allocation (~100x cheaper).
 - [ ] `jdw-osc-lib` `get_string_at` clones `OscType` on every access.
+      — 2026-06-20: fixed (pattern-match instead of clone) but reverted due
+      to sequencer sync regression (not confirmed as cause; purely a perf
+      change with identical behavior).
 - [x] **time 0.3.47 MSRV** — was an issue when on stable Rust <1.88. Using
       nightly, this is no longer a problem.
 
